@@ -1,0 +1,10 @@
+{
+    "configurations": [
+        {
+            "name": "tool/build_parsers.dart",
+            "type": "dart",
+            "request": "launch",
+            "program": "tool/build_parsers.dart"
+        }
+    ]
+}
