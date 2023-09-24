@@ -1,3 +1,7 @@
+## 0.1.2
+
+- Fixed bugs with parsing numbers and equality operators.
+
 ## 0.1.1
 
 - Added documentation for the `parseExpression` function.

@@ -76,6 +76,10 @@ class ExpressionParser {
         return () => l() as bool && right() as bool;
       case '??':
         return () => l() ?? right();
+      case '==':
+        return () => l() == right();
+      case '!=':
+        return () => l() != right();
       default:
         throw StateError('Unknown operator: $op');
     }
@@ -1438,73 +1442,69 @@ class ExpressionParser {
 
   /// Expression
   /// NumberRaw =
-  ///   v:$([-]? [0] / ([1-9] [0-9]*) ([.] [0-9]+)? ([eE] [+-\] [0-9]+)?) Spaces
+  ///   v:$([-]? ([0] / [1-9] [0-9]*) ([.] [0-9]+)? ([eE] [-+]? [0-9]+)?) Spaces
   ///   ;
   Expression? parseNumberRaw(State<StringReader> state) {
     Expression? $0;
-    // v:$([-]? [0] / ([1-9] [0-9]*) ([.] [0-9]+)? ([eE] [+-\] [0-9]+)?) Spaces
+    // v:$([-]? ([0] / [1-9] [0-9]*) ([.] [0-9]+)? ([eE] [-+]? [0-9]+)?) Spaces
     final $1 = state.pos;
     String? $2;
     final $3 = state.pos;
-    // [-]? [0]
-    final $15 = state.pos;
+    // [-]? ([0] / [1-9] [0-9]*) ([.] [0-9]+)? ([eE] [-+]? [0-9]+)?
+    final $4 = state.pos;
     matchChar(state, 45, const ErrorUnexpectedCharacter(45));
     state.ok = true;
     if (state.ok) {
+      // [0]
       matchChar(state, 48, const ErrorUnexpectedCharacter(48));
-    }
-    if (!state.ok) {
-      state.pos = $15;
-    }
-    if (!state.ok) {
-      // ([1-9] [0-9]*) ([.] [0-9]+)? ([eE] [+-\] [0-9]+)?
-      final $4 = state.pos;
-      // [1-9] [0-9]*
-      final $5 = state.pos;
-      state.ok = state.pos < state.input.length;
-      if (state.ok) {
-        final $6 = state.input.readChar(state.pos);
-        state.ok = $6 >= 49 && $6 <= 57;
-        if (state.ok) {
-          state.pos += state.input.count;
-        }
-      }
       if (!state.ok) {
-        state.fail(const ErrorUnexpectedCharacter());
-      }
-      if (state.ok) {
-        while (true) {
-          state.ok = state.pos < state.input.length;
+        // [1-9] [0-9]*
+        final $5 = state.pos;
+        state.ok = state.pos < state.input.length;
+        if (state.ok) {
+          final $6 = state.input.readChar(state.pos);
+          state.ok = $6 >= 49 && $6 <= 57;
           if (state.ok) {
-            final $7 = state.input.readChar(state.pos);
-            state.ok = $7 >= 48 && $7 <= 57;
-            if (state.ok) {
-              state.pos += state.input.count;
-            }
-          }
-          if (!state.ok) {
-            state.fail(const ErrorUnexpectedCharacter());
-          }
-          if (!state.ok) {
-            state.ok = true;
-            break;
+            state.pos += state.input.count;
           }
         }
-      }
-      if (!state.ok) {
-        state.pos = $5;
-      }
-      if (state.ok) {
-        // [.] [0-9]+
-        final $8 = state.pos;
-        matchChar(state, 46, const ErrorUnexpectedCharacter(46));
+        if (!state.ok) {
+          state.fail(const ErrorUnexpectedCharacter());
+        }
         if (state.ok) {
-          var $9 = false;
           while (true) {
             state.ok = state.pos < state.input.length;
             if (state.ok) {
-              final $10 = state.input.readChar(state.pos);
-              state.ok = $10 >= 48 && $10 <= 57;
+              final $7 = state.input.readChar(state.pos);
+              state.ok = $7 >= 48 && $7 <= 57;
+              if (state.ok) {
+                state.pos += state.input.count;
+              }
+            }
+            if (!state.ok) {
+              state.fail(const ErrorUnexpectedCharacter());
+            }
+            if (!state.ok) {
+              state.ok = true;
+              break;
+            }
+          }
+        }
+        if (!state.ok) {
+          state.pos = $5;
+        }
+      }
+      if (state.ok) {
+        // [.] [0-9]+
+        final $9 = state.pos;
+        matchChar(state, 46, const ErrorUnexpectedCharacter(46));
+        if (state.ok) {
+          var $10 = false;
+          while (true) {
+            state.ok = state.pos < state.input.length;
+            if (state.ok) {
+              final $11 = state.input.readChar(state.pos);
+              state.ok = $11 >= 48 && $11 <= 57;
               if (state.ok) {
                 state.pos += state.input.count;
               }
@@ -1515,21 +1515,21 @@ class ExpressionParser {
             if (!state.ok) {
               break;
             }
-            $9 = true;
+            $10 = true;
           }
-          state.ok = $9;
+          state.ok = $10;
         }
         if (!state.ok) {
-          state.pos = $8;
+          state.pos = $9;
         }
         state.ok = true;
         if (state.ok) {
-          // [eE] [+-\] [0-9]+
-          final $11 = state.pos;
+          // [eE] [-+]? [0-9]+
+          final $12 = state.pos;
           state.ok = state.pos < state.input.length;
           if (state.ok) {
-            final $12 = state.input.readChar(state.pos);
-            state.ok = $12 == 69 || $12 == 101;
+            final $13 = state.input.readChar(state.pos);
+            state.ok = $13 == 69 || $13 == 101;
             if (state.ok) {
               state.pos += state.input.count;
             }
@@ -1538,35 +1538,49 @@ class ExpressionParser {
             state.fail(const ErrorUnexpectedCharacter());
           }
           if (state.ok) {
-            var $13 = false;
-            while (true) {
-              state.ok = state.pos < state.input.length;
+            state.ok = state.pos < state.input.length;
+            if (state.ok) {
+              final $14 = state.input.readChar(state.pos);
+              state.ok = $14 == 43 || $14 == 45;
               if (state.ok) {
-                final $14 = state.input.readChar(state.pos);
-                state.ok = $14 == 32 || $14 >= 43 && $14 <= 93;
-                if (state.ok) {
-                  state.pos += state.input.count;
-                }
+                state.pos += state.input.count;
               }
-              if (!state.ok) {
-                state.fail(const ErrorUnexpectedCharacter());
-              }
-              if (!state.ok) {
-                break;
-              }
-              $13 = true;
             }
-            state.ok = $13;
+            if (!state.ok) {
+              state.fail(const ErrorUnexpectedCharacter());
+            }
+            state.ok = true;
+            if (state.ok) {
+              var $15 = false;
+              while (true) {
+                state.ok = state.pos < state.input.length;
+                if (state.ok) {
+                  final $16 = state.input.readChar(state.pos);
+                  state.ok = $16 >= 48 && $16 <= 57;
+                  if (state.ok) {
+                    state.pos += state.input.count;
+                  }
+                }
+                if (!state.ok) {
+                  state.fail(const ErrorUnexpectedCharacter());
+                }
+                if (!state.ok) {
+                  break;
+                }
+                $15 = true;
+              }
+              state.ok = $15;
+            }
           }
           if (!state.ok) {
-            state.pos = $11;
+            state.pos = $12;
           }
           state.ok = true;
         }
       }
-      if (!state.ok) {
-        state.pos = $4;
-      }
+    }
+    if (!state.ok) {
+      state.pos = $4;
     }
     if (state.ok) {
       $2 = state.input.substring($3, state.pos);

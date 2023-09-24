@@ -80,6 +80,10 @@ String _escape(int charCode) {
         return () => l() as bool && right() as bool;
       case '??':
         return () => l() ?? right();
+      case '==':
+        return () => l() == right();
+      case '!=':
+        return () => l() != right();
       default:
         throw StateError('Unknown operator: $op');
     }
@@ -272,9 +276,12 @@ Number = @errorHandler(NumberRaw, {
   }) ;
 
 Expression
-NumberRaw = v:$([-]? [0] / ([1-9][0-9]*) ([.] [0-9]+)? ([eE] [+-] [0-9]+)?) Spaces {
-    final number = num.parse(v); $$ = () => number;
-  } ;
+NumberRaw = v:$(
+  [-]?
+  ([0] / [1-9][0-9]*)
+  ([.] [0-9]+)?
+  ([eE] [-+]? [0-9]+)?
+  ) Spaces { final number = num.parse(v); $$ = () => number; } ;
 
 @inline
 String
