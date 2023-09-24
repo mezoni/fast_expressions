@@ -126,8 +126,7 @@ void main(List<String> args) {
     }
 
     sw.stop();
-    print(
-        'Expression "$e" parsed and and evaluated $count times in ${sw.elapsed}');
+    print('Expression "$e" parsed and evaluated $count times in ${sw.elapsed}');
   }
 
   {
@@ -147,8 +146,7 @@ void main(List<String> args) {
     }
 
     sw.stop();
-    print(
-        'Expression "$e" parsed and and evaluated $count times in ${sw.elapsed}');
+    print('Expression "$e" parsed and evaluated $count times in ${sw.elapsed}');
   }
 }
 
