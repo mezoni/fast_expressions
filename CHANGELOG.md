@@ -1,3 +1,7 @@
+## 0.1.3
+
+- Added support for parsing boolean literals.
+
 ## 0.1.2
 
 - Fixed bugs with parsing numbers and equality operators.

@@ -261,10 +261,17 @@ MapEntry<Symbol, Expression>
 NamedArgument = i:IdentifierRaw Colon e:Expression { $$ = MapEntry(Symbol(i), e); } ;
 
 Primary =
-    Identifier
-  / Number
+    Number
+  / Boolean
   / String
+  / Identifier
   / OpenParenthesis v:Expression CloseParenthesis ;
+
+Expression
+Boolean =
+    'true' Spaces { $$ = () => true; }
+  / 'false' Spaces { $$ = () => false; }
+  ;
 
 Number = @errorHandler(NumberRaw, {
     if (state.failPos != state.pos) {

@@ -655,6 +655,48 @@ class ExpressionParser {
   }
 
   /// Expression
+  /// Boolean =
+  ///     'true' Spaces
+  ///   / 'false' Spaces
+  ///   ;
+  Expression? parseBoolean(State<StringReader> state) {
+    Expression? $0;
+    // 'true' Spaces
+    final $3 = state.pos;
+    const $4 = 'true';
+    matchLiteral(state, $4, const ErrorExpectedTags([$4]));
+    if (state.ok) {
+      fastParseSpaces(state);
+      if (state.ok) {
+        Expression? $$;
+        $$ = () => true;
+        $0 = $$;
+      }
+    }
+    if (!state.ok) {
+      state.pos = $3;
+    }
+    if (!state.ok) {
+      // 'false' Spaces
+      final $1 = state.pos;
+      const $2 = 'false';
+      matchLiteral(state, $2, const ErrorExpectedTags([$2]));
+      if (state.ok) {
+        fastParseSpaces(state);
+        if (state.ok) {
+          Expression? $$;
+          $$ = () => false;
+          $0 = $$;
+        }
+      }
+      if (!state.ok) {
+        state.pos = $1;
+      }
+    }
+    return $0;
+  }
+
+  /// Expression
   /// Conditional =
   ///     e1:IfNull Question e2:Expression Colon e3:Expression
   ///   / IfNull
@@ -1691,21 +1733,22 @@ class ExpressionParser {
   }
 
   /// Primary =
-  ///     Identifier
-  ///   / Number
+  ///     Number
+  ///   / Boolean
   ///   / String
+  ///   / Identifier
   ///   / OpenParenthesis v:Expression CloseParenthesis
   ///   ;
   Expression? parsePrimary(State<StringReader> state) {
     Expression? $0;
-    // Identifier
-    $0 = parseIdentifier(state);
+    // Number
+    $0 = parseNumber(state);
     if (state.ok) {
       $0 = $0;
     }
     if (!state.ok) {
-      // Number
-      $0 = parseNumber(state);
+      // Boolean
+      $0 = parseBoolean(state);
       if (state.ok) {
         $0 = $0;
       }
@@ -1716,21 +1759,28 @@ class ExpressionParser {
           $0 = $0;
         }
         if (!state.ok) {
-          // OpenParenthesis v:Expression CloseParenthesis
-          final $1 = state.pos;
-          fastParseOpenParenthesis(state);
+          // Identifier
+          $0 = parseIdentifier(state);
           if (state.ok) {
-            Expression? $2;
-            $2 = parseExpression(state);
-            if (state.ok) {
-              fastParseCloseParenthesis(state);
-              if (state.ok) {
-                $0 = $2;
-              }
-            }
+            $0 = $0;
           }
           if (!state.ok) {
-            state.pos = $1;
+            // OpenParenthesis v:Expression CloseParenthesis
+            final $1 = state.pos;
+            fastParseOpenParenthesis(state);
+            if (state.ok) {
+              Expression? $2;
+              $2 = parseExpression(state);
+              if (state.ok) {
+                fastParseCloseParenthesis(state);
+                if (state.ok) {
+                  $0 = $2;
+                }
+              }
+            }
+            if (!state.ok) {
+              state.pos = $1;
+            }
           }
         }
       }
