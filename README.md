@@ -2,7 +2,7 @@
 
 Fast Expressions is an expression parser and evaluation library.
 
-Version: 0.1.2
+Version: 0.1.3
 
 [![Pub Package](https://img.shields.io/pub/v/fast_expressions.svg)](https://pub.dev/packages/fast_expressions)
 [![GitHub Issues](https://img.shields.io/github/issues/mezoni/fast_expressions.svg)](https://github.com/mezoni/fast_expressions/issues)
