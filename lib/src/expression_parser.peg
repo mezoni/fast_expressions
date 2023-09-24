@@ -264,11 +264,12 @@ Primary =
     Number
   / Boolean
   / String
+  / Null
   / Identifier
   / OpenParenthesis v:Expression CloseParenthesis ;
 
 Expression
-Null 'null' Spaces { $$ = () => null; }
+Null = 'null' Spaces { $$ = () => null; } ;
 
 Expression
 Boolean =

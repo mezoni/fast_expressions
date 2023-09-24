@@ -1448,6 +1448,30 @@ class ExpressionParser {
     return $0;
   }
 
+  /// Expression
+  /// Null =
+  ///   'null' Spaces
+  ///   ;
+  Expression? parseNull(State<StringReader> state) {
+    Expression? $0;
+    // 'null' Spaces
+    final $1 = state.pos;
+    const $2 = 'null';
+    matchLiteral(state, $2, const ErrorExpectedTags([$2]));
+    if (state.ok) {
+      fastParseSpaces(state);
+      if (state.ok) {
+        Expression? $$;
+        $$ = () => null;
+        $0 = $$;
+      }
+    }
+    if (!state.ok) {
+      state.pos = $1;
+    }
+    return $0;
+  }
+
   /// Number =
   ///   @errorHandler(NumberRaw)
   ///   ;
@@ -1736,6 +1760,7 @@ class ExpressionParser {
   ///     Number
   ///   / Boolean
   ///   / String
+  ///   / Null
   ///   / Identifier
   ///   / OpenParenthesis v:Expression CloseParenthesis
   ///   ;
@@ -1759,27 +1784,34 @@ class ExpressionParser {
           $0 = $0;
         }
         if (!state.ok) {
-          // Identifier
-          $0 = parseIdentifier(state);
+          // Null
+          $0 = parseNull(state);
           if (state.ok) {
             $0 = $0;
           }
           if (!state.ok) {
-            // OpenParenthesis v:Expression CloseParenthesis
-            final $1 = state.pos;
-            fastParseOpenParenthesis(state);
+            // Identifier
+            $0 = parseIdentifier(state);
             if (state.ok) {
-              Expression? $2;
-              $2 = parseExpression(state);
-              if (state.ok) {
-                fastParseCloseParenthesis(state);
-                if (state.ok) {
-                  $0 = $2;
-                }
-              }
+              $0 = $0;
             }
             if (!state.ok) {
-              state.pos = $1;
+              // OpenParenthesis v:Expression CloseParenthesis
+              final $1 = state.pos;
+              fastParseOpenParenthesis(state);
+              if (state.ok) {
+                Expression? $2;
+                $2 = parseExpression(state);
+                if (state.ok) {
+                  fastParseCloseParenthesis(state);
+                  if (state.ok) {
+                    $0 = $2;
+                  }
+                }
+              }
+              if (!state.ok) {
+                state.pos = $1;
+              }
             }
           }
         }
