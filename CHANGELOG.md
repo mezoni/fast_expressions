@@ -1,6 +1,7 @@
 ## 0.1.3
 
 - Added support for parsing boolean literals.
+- Added support for parsing `null` literal.
 
 ## 0.1.2
 

@@ -268,6 +268,9 @@ Primary =
   / OpenParenthesis v:Expression CloseParenthesis ;
 
 Expression
+Null 'null' Spaces { $$ = () => null; }
+
+Expression
 Boolean =
     'true' Spaces { $$ = () => true; }
   / 'false' Spaces { $$ = () => false; }
