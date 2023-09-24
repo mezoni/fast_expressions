@@ -2,6 +2,7 @@
 
 - Added support for parsing boolean literals.
 - Added support for parsing `null` literal.
+- Added initial tests (binary and unary operators).
 
 ## 0.1.2
 
