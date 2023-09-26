@@ -1,6 +1,6 @@
 name: fast_expressions
 description: Fast Expressions is an expression parser and evaluation library.
-version: 0.1.4
+version: 0.1.5
 homepage: https://github.com/mezoni/fast_expressions
 topics:
   - expressions
