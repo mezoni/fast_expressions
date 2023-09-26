@@ -11,6 +11,7 @@ void main(List<String> args) {
     );
     print(r());
   }
+
   {
     const e = '1 + 2 * 3';
     final r = parseExpression(e);
@@ -46,6 +47,17 @@ void main(List<String> args) {
       e,
       context: {
         'add': (num x, num y) => x + y,
+      },
+    );
+    print(r());
+  }
+
+  {
+    const e = '1 + 2 * sub(x: 7, y: 4)';
+    final r = parseExpression(
+      e,
+      context: {
+        'sub': ({required num x, required num y}) => x - y,
       },
     );
     print(r());
@@ -93,46 +105,6 @@ void main(List<String> args) {
       resolve: _resolve,
     );
     print(r());
-  }
-
-  {
-    const e = '1 + 2 * foo.list()[foo.add(1, 1)]';
-    final sw = Stopwatch();
-    sw.start();
-    const count = 10000;
-    for (var i = 0; i < count; i++) {
-      final r = parseExpression(
-        e,
-        context: {
-          'foo': Foo(),
-        },
-        resolve: _resolve,
-      );
-      r();
-    }
-
-    sw.stop();
-    print('Expression "$e" parsed and evaluated $count times in ${sw.elapsed}');
-  }
-
-  {
-    const e = '1 + 2 * 3';
-    final sw = Stopwatch();
-    sw.start();
-    const count = 100000;
-    for (var i = 0; i < count; i++) {
-      final r = parseExpression(
-        e,
-        context: {
-          'foo': Foo(),
-        },
-        resolve: _resolve,
-      );
-      r();
-    }
-
-    sw.stop();
-    print('Expression "$e" parsed and evaluated $count times in ${sw.elapsed}');
   }
 }
 

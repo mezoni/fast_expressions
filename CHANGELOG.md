@@ -1,3 +1,7 @@
+## 0.1.5
+
+- Fixed a bug with parsing named function arguments.
+
 ## 0.1.4
 
 - Changes in the file `example/example.dart`.

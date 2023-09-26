@@ -120,7 +120,8 @@ String _escape(int charCode) {
             if (resolve case final resolve?) {
               return resolve(object3, member);
             } else {
-              throw StateError("Unable to resolve member '$member' for $object3");
+              throw StateError(
+                  "Unable to resolve member '$member' for $object3");
             }
           };
           break;
@@ -135,29 +136,28 @@ String _escape(int charCode) {
           break;
         case '(':
           final object2 = object;
-          final arguments2 = arguments as ({
-            List<Expression>? positionalArguments,
-            Map<Symbol, Expression>? namedArguments
-          });
-          final positionalArguments = arguments2.positionalArguments;
-          final namedArguments = arguments2.namedArguments;
+          final arguments2 =
+              arguments as List<({String name, Expression expr})>;
           object = () {
             final object3 = object2() as Function;
-            var positionalArguments2 = const <dynamic>[];
-            if (positionalArguments != null) {
-              positionalArguments2 =
-                  positionalArguments.map((e) => e()).toList();
+            final positionalArguments = <dynamic>[];
+            final namedArguments = <Symbol, dynamic>{};
+            for (final element in arguments2) {
+              final name = element.name;
+              final expr = element.expr;
+              if (name.isEmpty) {
+                positionalArguments.add(expr());
+              } else {
+                if (namedArguments.containsKey(name)) {
+                  throw StateError('Duplicate named argument: $name');
+                }
+
+                final key = Symbol(name);
+                namedArguments[key] = expr();
+              }
             }
 
-            var namedArguments2 = const <Symbol, dynamic>{};
-            if (namedArguments != null) {
-              final entries =
-                  namedArguments.entries.map((e) => MapEntry(e.key, e.value()));
-              namedArguments2 = Map.fromEntries(entries);
-            }
-
-            return Function.apply(
-                object3, positionalArguments2, namedArguments2);
+            return Function.apply(object3, positionalArguments, namedArguments);
           };
           break;
         default:
@@ -245,20 +245,13 @@ UnaryPostfix = object:Primary selectors:Selector* { $$ = _postfix(object, select
 Selector =
     kind:Dot arguments:IdentifierRaw
   / kind:OpenBracket arguments:Expression CloseBracket
-  / kind:OpenParenthesis arguments:Arguments CloseParenthesis
-  ;
+  / kind:OpenParenthesis arguments:Arguments CloseParenthesis ;
 
-({List<dynamic>? positionalArguments, Map<Symbol, dynamic>? namedArguments})
-Arguments = positionalArguments:PositionalArguments namedArguments:NamedArguments ;
+Arguments = @sepBy((NamedArgument / PositionalArgument), Comma) ;
 
-List<Expression>
-PositionalArguments = @sepBy(Expression, Comma) ;
+NamedArgument = name:IdentifierRaw Colon expr:Expression ;
 
-Map<Symbol, Expression>
-NamedArguments = v:@sepBy(NamedArgument, Comma) { $$ = v.isEmpty ? const {} : Map.fromEntries(v); } ;
-
-MapEntry<Symbol, Expression>
-NamedArgument = i:IdentifierRaw Colon e:Expression { $$ = MapEntry(Symbol(i), e); } ;
+PositionalArgument = name:'' expr:Expression ;
 
 Primary =
     Number
@@ -274,16 +267,15 @@ Null = 'null' Spaces { $$ = () => null; } ;
 Expression
 Boolean =
     'true' Spaces { $$ = () => true; }
-  / 'false' Spaces { $$ = () => false; }
-  ;
+  / 'false' Spaces { $$ = () => false; } ;
 
 Fraction = @errorHandler([0-9]+, {
-    error = const ErrorExpectedTags(['fraction part']);
-  });
+    error = const ErrorExpectedTags(['fractional part']);
+  }) ;
 
 Exponent = @errorHandler([-+]? [0-9]+, {
     error = const ErrorExpectedTags(['exponent part']);
-  });
+  }) ;
 
 Expression
 NumberRaw = v:$(
@@ -292,8 +284,8 @@ NumberRaw = v:$(
   ([.] Fraction)?
   ([eE] Exponent)?
   ) {
-      final n = num.parse(v);
-      $$ = () => n;
+    final n = num.parse(v);
+    $$ = () => n;
   } ;
 
 Expression
@@ -304,7 +296,7 @@ Number = v:@errorHandler(NumberRaw, {
       rollbackErrors = true;
       error = ErrorExpectedTags(['number']);
     }
-  }) Spaces;
+  }) Spaces ;
 
 @inline
 String
@@ -325,8 +317,7 @@ HexNumberRaw = v:$([0-9A-Za-z]{4}) { $$ = int.parse(v, radix: 16); } ;
 String
 StringChars =
     $[\u{20}-\u{21}\u{23}-\u{5b}\u{5d}-\u{10ffff}]+
-  / '\\' v:(EscapeChar / EscapeHex)
-  ;
+  / '\\' v:(EscapeChar / EscapeHex) ;
 
 String
 StringRaw = '"' v:StringChars* DoubleQuote { $$ = v.join(); } ;

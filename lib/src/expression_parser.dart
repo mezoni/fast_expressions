@@ -132,29 +132,28 @@ class ExpressionParser {
           break;
         case '(':
           final object2 = object;
-          final arguments2 = arguments as ({
-            List<Expression>? positionalArguments,
-            Map<Symbol, Expression>? namedArguments
-          });
-          final positionalArguments = arguments2.positionalArguments;
-          final namedArguments = arguments2.namedArguments;
+          final arguments2 =
+              arguments as List<({String name, Expression expr})>;
           object = () {
             final object3 = object2() as Function;
-            var positionalArguments2 = const <dynamic>[];
-            if (positionalArguments != null) {
-              positionalArguments2 =
-                  positionalArguments.map((e) => e()).toList();
+            final positionalArguments = <dynamic>[];
+            final namedArguments = <Symbol, dynamic>{};
+            for (final element in arguments2) {
+              final name = element.name;
+              final expr = element.expr;
+              if (name.isEmpty) {
+                positionalArguments.add(expr());
+              } else {
+                if (namedArguments.containsKey(name)) {
+                  throw StateError('Duplicate named argument: $name');
+                }
+
+                final key = Symbol(name);
+                namedArguments[key] = expr();
+              }
             }
 
-            var namedArguments2 = const <Symbol, dynamic>{};
-            if (namedArguments != null) {
-              final entries =
-                  namedArguments.entries.map((e) => MapEntry(e.key, e.value()));
-              namedArguments2 = Map.fromEntries(entries);
-            }
-
-            return Function.apply(
-                object3, positionalArguments2, namedArguments2);
+            return Function.apply(object3, positionalArguments, namedArguments);
           };
           break;
         default:
@@ -356,7 +355,7 @@ class ExpressionParser {
       ParseError? error;
       // ignore: prefer_final_locals
       var rollbackErrors = false;
-      error = const ErrorExpectedTags(['fraction part']);
+      error = const ErrorExpectedTags(['fractional part']);
       if (rollbackErrors == true) {
         state._rollbackErrors($1, $2);
         // ignore: unnecessary_null_comparison, prefer_conditional_assignment
@@ -520,31 +519,53 @@ class ExpressionParser {
     return $0;
   }
 
-  /// ({List<dynamic>? positionalArguments, Map<Symbol, dynamic>? namedArguments})
   /// Arguments =
-  ///   positionalArguments:PositionalArguments namedArguments:NamedArguments
+  ///   @sepBy((NamedArgument / PositionalArgument), Comma)
   ///   ;
-  ({List<dynamic>? positionalArguments, Map<Symbol, dynamic>? namedArguments})?
-      parseArguments(State<StringReader> state) {
-    ({
-      List<dynamic>? positionalArguments,
-      Map<Symbol, dynamic>? namedArguments
-    })? $0;
-    // positionalArguments:PositionalArguments namedArguments:NamedArguments
-    final $1 = state.pos;
-    List<Expression>? $2;
-    // PositionalArguments
-    $2 = parsePositionalArguments(state);
-    if (state.ok) {
-      Map<Symbol, Expression>? $3;
-      // NamedArguments
-      $3 = parseNamedArguments(state);
-      if (state.ok) {
-        $0 = (positionalArguments: $2!, namedArguments: $3!);
-      }
+  List<({String name, Expression expr})>? parseArguments(
+      State<StringReader> state) {
+    List<({String name, Expression expr})>? $0;
+    // @sepBy((NamedArgument / PositionalArgument), Comma)
+    ({String name, Expression expr})? $4;
+    // (NamedArgument / PositionalArgument)
+    // NamedArgument
+    // NamedArgument
+    $4 = parseNamedArgument(state);
+    if (!state.ok) {
+      // PositionalArgument
+      // PositionalArgument
+      $4 = parsePositionalArgument(state);
     }
     if (!state.ok) {
-      state.pos = $1;
+      state.ok = true;
+      $0 = const [];
+    } else {
+      final $3 = [$4!];
+      while (true) {
+        final $2 = state.pos;
+        // Comma
+        // Comma
+        fastParseComma(state);
+        if (!state.ok) {
+          state.ok = true;
+          $0 = $3;
+          break;
+        }
+        // (NamedArgument / PositionalArgument)
+        // NamedArgument
+        // NamedArgument
+        $4 = parseNamedArgument(state);
+        if (!state.ok) {
+          // PositionalArgument
+          // PositionalArgument
+          $4 = parsePositionalArgument(state);
+        }
+        if (!state.ok) {
+          state.pos = $2;
+          break;
+        }
+        $3.add($4!);
+      }
     }
     return $0;
   }
@@ -1540,13 +1561,13 @@ class ExpressionParser {
     return $0;
   }
 
-  /// MapEntry<Symbol, Expression>
   /// NamedArgument =
-  ///   i:IdentifierRaw Colon e:Expression
+  ///   name:IdentifierRaw Colon expr:Expression
   ///   ;
-  MapEntry<Symbol, Expression>? parseNamedArgument(State<StringReader> state) {
-    MapEntry<Symbol, Expression>? $0;
-    // i:IdentifierRaw Colon e:Expression
+  ({String name, Expression expr})? parseNamedArgument(
+      State<StringReader> state) {
+    ({String name, Expression expr})? $0;
+    // name:IdentifierRaw Colon expr:Expression
     final $1 = state.pos;
     String? $2;
     // IdentifierRaw
@@ -1559,62 +1580,12 @@ class ExpressionParser {
         // Expression
         $3 = parseExpression(state);
         if (state.ok) {
-          MapEntry<Symbol, Expression>? $$;
-          final i = $2!;
-          final e = $3!;
-          $$ = MapEntry(Symbol(i), e);
-          $0 = $$;
+          $0 = (name: $2!, expr: $3!);
         }
       }
     }
     if (!state.ok) {
       state.pos = $1;
-    }
-    return $0;
-  }
-
-  /// Map<Symbol, Expression>
-  /// NamedArguments =
-  ///   v:@sepBy(NamedArgument, Comma)
-  ///   ;
-  Map<Symbol, Expression>? parseNamedArguments(State<StringReader> state) {
-    Map<Symbol, Expression>? $0;
-    // v:@sepBy(NamedArgument, Comma)
-    List<MapEntry<Symbol, Expression>>? $2;
-    MapEntry<Symbol, Expression>? $5;
-    // NamedArgument
-    // NamedArgument
-    $5 = parseNamedArgument(state);
-    if (!state.ok) {
-      state.ok = true;
-      $2 = const [];
-    } else {
-      final $4 = [$5!];
-      while (true) {
-        final $3 = state.pos;
-        // Comma
-        // Comma
-        fastParseComma(state);
-        if (!state.ok) {
-          state.ok = true;
-          $2 = $4;
-          break;
-        }
-        // NamedArgument
-        // NamedArgument
-        $5 = parseNamedArgument(state);
-        if (!state.ok) {
-          state.pos = $3;
-          break;
-        }
-        $4.add($5!);
-      }
-    }
-    if (state.ok) {
-      Map<Symbol, Expression>? $$;
-      final v = $2!;
-      $$ = v.isEmpty ? const {} : Map.fromEntries(v);
-      $0 = $$;
     }
     return $0;
   }
@@ -1646,17 +1617,19 @@ class ExpressionParser {
 
   /// Expression
   /// Number =
-  ///   v:@errorHandler(NumberRaw)
+  ///   v:@errorHandler(NumberRaw) Spaces
   ///   ;
   Expression? parseNumber(State<StringReader> state) {
     Expression? $0;
-    // v:@errorHandler(NumberRaw)
-    final $2 = state.failPos;
-    final $3 = state.errorCount;
+    // v:@errorHandler(NumberRaw) Spaces
+    final $1 = state.pos;
+    Expression? $2;
+    final $3 = state.failPos;
+    final $4 = state.errorCount;
     // NumberRaw
     // NumberRaw
-    $0 = parseNumberRaw(state);
-    if (!state.ok && state._canHandleError($2, $3)) {
+    $2 = parseNumberRaw(state);
+    if (!state.ok && state._canHandleError($3, $4)) {
       ParseError? error;
       // ignore: prefer_final_locals
       var rollbackErrors = false;
@@ -1667,7 +1640,7 @@ class ExpressionParser {
         error = ErrorExpectedTags(['number']);
       }
       if (rollbackErrors == true) {
-        state._rollbackErrors($2, $3);
+        state._rollbackErrors($3, $4);
         // ignore: unnecessary_null_comparison, prefer_conditional_assignment
         if (error == null) {
           error = const ErrorUnknownError();
@@ -1678,17 +1651,26 @@ class ExpressionParser {
         state.failAt(state.failPos, error);
       }
     }
+    if (state.ok) {
+      // Spaces
+      fastParseSpaces(state);
+      if (state.ok) {
+        $0 = $2;
+      }
+    }
+    if (!state.ok) {
+      state.pos = $1;
+    }
     return $0;
   }
 
   /// Expression
   /// NumberRaw =
-  ///   v:$([-]? ([0] / [1-9] [0-9]*) ([.] Fraction)? ([eE] Exponent)?) Spaces
+  ///   v:$([-]? ([0] / [1-9] [0-9]*) ([.] Fraction)? ([eE] Exponent)?)
   ///   ;
   Expression? parseNumberRaw(State<StringReader> state) {
     Expression? $0;
-    // v:$([-]? ([0] / [1-9] [0-9]*) ([.] Fraction)? ([eE] Exponent)?) Spaces
-    final $1 = state.pos;
+    // v:$([-]? ([0] / [1-9] [0-9]*) ([.] Fraction)? ([eE] Exponent)?)
     String? $2;
     final $3 = state.pos;
     // [-]? ([0] / [1-9] [0-9]*) ([.] Fraction)? ([eE] Exponent)?
@@ -1772,18 +1754,11 @@ class ExpressionParser {
       $2 = state.input.substring($3, state.pos);
     }
     if (state.ok) {
-      // Spaces
-      fastParseSpaces(state);
-      if (state.ok) {
-        Expression? $$;
-        final v = $2!;
-        final n = num.parse(v);
-        $$ = () => n;
-        $0 = $$;
-      }
-    }
-    if (!state.ok) {
-      state.pos = $1;
+      Expression? $$;
+      final v = $2!;
+      final n = num.parse(v);
+      $$ = () => n;
+      $0 = $$;
     }
     return $0;
   }
@@ -1834,41 +1809,29 @@ class ExpressionParser {
     return $0;
   }
 
-  /// List<Expression>
-  /// PositionalArguments =
-  ///   @sepBy(Expression, Comma)
+  /// PositionalArgument =
+  ///   name:'' expr:Expression
   ///   ;
-  List<Expression>? parsePositionalArguments(State<StringReader> state) {
-    List<Expression>? $0;
-    // @sepBy(Expression, Comma)
-    Expression? $4;
-    // Expression
-    // Expression
-    $4 = parseExpression(state);
-    if (!state.ok) {
-      state.ok = true;
-      $0 = const [];
-    } else {
-      final $3 = [$4!];
-      while (true) {
-        final $2 = state.pos;
-        // Comma
-        // Comma
-        fastParseComma(state);
-        if (!state.ok) {
-          state.ok = true;
-          $0 = $3;
-          break;
-        }
-        // Expression
-        // Expression
-        $4 = parseExpression(state);
-        if (!state.ok) {
-          state.pos = $2;
-          break;
-        }
-        $3.add($4!);
+  ({String name, Expression expr})? parsePositionalArgument(
+      State<StringReader> state) {
+    ({String name, Expression expr})? $0;
+    // name:'' expr:Expression
+    final $1 = state.pos;
+    String? $2;
+    state.ok = true;
+    if (state.ok) {
+      $2 = '';
+    }
+    if (state.ok) {
+      Expression? $3;
+      // Expression
+      $3 = parseExpression(state);
+      if (state.ok) {
+        $0 = (name: $2!, expr: $3!);
       }
+    }
+    if (!state.ok) {
+      state.pos = $1;
     }
     return $0;
   }
@@ -2092,10 +2055,7 @@ class ExpressionParser {
         // OpenParenthesis
         $2 = parseOpenParenthesis(state);
         if (state.ok) {
-          ({
-            List<dynamic>? positionalArguments,
-            Map<Symbol, dynamic>? namedArguments
-          })? $3;
+          List<({String name, Expression expr})>? $3;
           // Arguments
           $3 = parseArguments(state);
           if (state.ok) {
