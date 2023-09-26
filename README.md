@@ -2,7 +2,7 @@
 
 Fast Expressions is an expression parser and evaluation library.
 
-Version: 0.1.3
+Version: 0.1.4
 
 [![Pub Package](https://img.shields.io/pub/v/fast_expressions.svg)](https://pub.dev/packages/fast_expressions)
 [![GitHub Issues](https://img.shields.io/github/issues/mezoni/fast_expressions.svg)](https://github.com/mezoni/fast_expressions/issues)
@@ -25,6 +25,14 @@ import 'dart:math';
 import 'package:fast_expressions/fast_expressions.dart';
 
 void main(List<String> args) {
+  {
+    const e = '1.isEven ? "Yes, 1 is even" : "No, 1 is odd"';
+    final r = parseExpression(
+      e,
+      resolve: _resolve,
+    );
+    print(r());
+  }
   {
     const e = '1 + 2 * 3';
     final r = parseExpression(e);
@@ -168,6 +176,13 @@ dynamic _resolve(dynamic object, String member) {
     switch (member) {
       case 'name':
         return object.name;
+    }
+  }
+
+  if (object is int) {
+    switch (member) {
+      case 'isEven':
+        return object.isEven;
     }
   }
 
