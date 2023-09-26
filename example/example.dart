@@ -4,6 +4,20 @@ import 'package:fast_expressions/fast_expressions.dart';
 
 void main(List<String> args) {
   {
+    const e = '1. + 2 * 3';
+    final r = parseExpression(e);
+    print(r());
+  }
+
+  {
+    const e = '1.isEven ? "Yes, 1 is even" : "No, 1 is odd"';
+    final r = parseExpression(
+      e,
+      resolve: _resolve,
+    );
+    print(r());
+  }
+  {
     const e = '1 + 2 * 3';
     final r = parseExpression(e);
     print(r());
@@ -146,6 +160,13 @@ dynamic _resolve(dynamic object, String member) {
     switch (member) {
       case 'name':
         return object.name;
+    }
+  }
+
+  if (object is int) {
+    switch (member) {
+      case 'isEven':
+        return object.isEven;
     }
   }
 

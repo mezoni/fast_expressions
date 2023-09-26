@@ -1,3 +1,9 @@
+## 0.1.5
+
+- Changes in the file `example/example.dart`.
+- Changed production rule for parsing numeric literals.
+- Fixed a bug in the implementation of `Expression _binary()`. The keyword `throw` was not specified before the exception expression.
+
 ## 0.1.4
 
 - Changes in the file `example/example.dart`.

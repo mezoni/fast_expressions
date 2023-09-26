@@ -120,7 +120,7 @@ String _escape(int charCode) {
             if (resolve case final resolve?) {
               return resolve(object3, member);
             } else {
-              StateError("Unable to resolve member '$member' for $object3");
+              throw StateError("Unable to resolve member '$member' for $object3");
             }
           };
           break;
@@ -277,22 +277,34 @@ Boolean =
   / 'false' Spaces { $$ = () => false; }
   ;
 
-Number = @errorHandler(NumberRaw, {
-    if (state.failPos != state.pos) {
-      state.failAt(state.failPos, ErrorMessage(state.pos - state.failPos, 'Malformed number'));
-    } else {
-      const errors = [ErrorExpectedTags(['number'])];
-      replaceLastErrors(errors);
-    }
-  }) ;
+Fraction = @errorHandler([0-9]+, {
+    error = const ErrorExpectedTags(['fraction part']);
+  });
+
+Exponent = @errorHandler([-+]? [0-9]+, {
+    error = const ErrorExpectedTags(['exponent part']);
+  });
 
 Expression
 NumberRaw = v:$(
   [-]?
   ([0] / [1-9][0-9]*)
-  ([.] [0-9]+)?
-  ([eE] [-+]? [0-9]+)?
-  ) Spaces { final number = num.parse(v); $$ = () => number; } ;
+  ([.] Fraction)?
+  ([eE] Exponent)?
+  ) {
+      final n = num.parse(v);
+      $$ = () => n;
+  } ;
+
+Expression
+Number = v:@errorHandler(NumberRaw, {
+    if (state.failPos != state.pos) {
+      error = ErrorMessage(state.pos - state.failPos, 'Malformed number');
+    } else {
+      rollbackErrors = true;
+      error = ErrorExpectedTags(['number']);
+    }
+  }) Spaces;
 
 @inline
 String
@@ -303,8 +315,8 @@ String
 EscapeHex = 'u' v:HexNumber { $$ = String.fromCharCode(v); } ;
 
 HexNumber = @errorHandler(HexNumberRaw, {
-    final errors = [ErrorMessage(state.pos - state.failPos, 'Expected 4 digit hex number')];
-    replaceLastErrors(errors);
+    error = ErrorMessage(state.pos - state.failPos, 'Expected 4 digit hex number');
+    rollbackErrors = true;
   }) ;
 
 int
@@ -323,7 +335,11 @@ Expression
 String = v:StringRaw { $$ = () => v; } ;
 
 String
-IdentifierRaw = v:$([a-zA-Z_$] [a-zA-Z_$0-9]*) Spaces ;
+IdentifierRaw = v:@errorHandler($([a-zA-Z_$] [a-zA-Z_$0-9]*), {
+    if (state.failPos == state.pos) {
+      error = const ErrorExpectedTags(['identifier']);
+    }
+  }) Spaces ;
 
 Expression
 Identifier = v:IdentifierRaw {
