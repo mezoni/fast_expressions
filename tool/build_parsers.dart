@@ -5,7 +5,7 @@ import 'dart:io';
 Future<void> main(List<String> args) async {
   final exitCodes = <Future<int>>[];
   const files = [
-    'lib/src/expression_parser.peg',
+    'lib/src/expression.peg',
   ];
   final process = await Process.start(Platform.executable, [
     'pub',

@@ -1,4 +1,4 @@
-import 'src/expression_parser.dart';
+import 'src/expression_converter.dart';
 
 /// Parses the source code of the expression from [source] and returns a
 /// function in which the parsed expression will be wrapped.
@@ -17,6 +17,6 @@ dynamic Function() parseExpression(
     context: context,
     resolve: resolve,
   );
-  final result = parseString(parser.parseStart, source);
+  final result = ExpressionConverter(parser: parser).convert(source);
   return result;
 }

@@ -167,11 +167,17 @@ class ExpressionParser {
   /// CloseBracket =
   ///   v:']' Spaces
   ///   ;
-  void fastParseCloseBracket(State<StringReader> state) {
+  void fastParseCloseBracket(State<String> state) {
     // v:']' Spaces
     final $0 = state.pos;
     const $1 = ']';
-    matchLiteral1(state, 93, $1, const ErrorExpectedTags([$1]));
+    state.ok = state.pos < state.input.length &&
+        state.input.codeUnitAt(state.pos) == 93;
+    if (state.ok) {
+      state.pos++;
+    } else {
+      state.fail(const ErrorExpectedTags([$1]));
+    }
     if (state.ok) {
       // Spaces
       fastParseSpaces(state);
@@ -184,11 +190,17 @@ class ExpressionParser {
   /// CloseParenthesis =
   ///   v:')' Spaces
   ///   ;
-  void fastParseCloseParenthesis(State<StringReader> state) {
+  void fastParseCloseParenthesis(State<String> state) {
     // v:')' Spaces
     final $0 = state.pos;
     const $1 = ')';
-    matchLiteral1(state, 41, $1, const ErrorExpectedTags([$1]));
+    state.ok = state.pos < state.input.length &&
+        state.input.codeUnitAt(state.pos) == 41;
+    if (state.ok) {
+      state.pos++;
+    } else {
+      state.fail(const ErrorExpectedTags([$1]));
+    }
     if (state.ok) {
       // Spaces
       fastParseSpaces(state);
@@ -201,11 +213,17 @@ class ExpressionParser {
   /// Colon =
   ///   v:':' Spaces
   ///   ;
-  void fastParseColon(State<StringReader> state) {
+  void fastParseColon(State<String> state) {
     // v:':' Spaces
     final $0 = state.pos;
     const $1 = ':';
-    matchLiteral1(state, 58, $1, const ErrorExpectedTags([$1]));
+    state.ok = state.pos < state.input.length &&
+        state.input.codeUnitAt(state.pos) == 58;
+    if (state.ok) {
+      state.pos++;
+    } else {
+      state.fail(const ErrorExpectedTags([$1]));
+    }
     if (state.ok) {
       // Spaces
       fastParseSpaces(state);
@@ -218,11 +236,17 @@ class ExpressionParser {
   /// Comma =
   ///   v:',' Spaces
   ///   ;
-  void fastParseComma(State<StringReader> state) {
+  void fastParseComma(State<String> state) {
     // v:',' Spaces
     final $0 = state.pos;
     const $1 = ',';
-    matchLiteral1(state, 44, $1, const ErrorExpectedTags([$1]));
+    state.ok = state.pos < state.input.length &&
+        state.input.codeUnitAt(state.pos) == 44;
+    if (state.ok) {
+      state.pos++;
+    } else {
+      state.fail(const ErrorExpectedTags([$1]));
+    }
     if (state.ok) {
       // Spaces
       fastParseSpaces(state);
@@ -235,11 +259,17 @@ class ExpressionParser {
   /// DoubleQuote =
   ///   v:'"' Spaces
   ///   ;
-  void fastParseDoubleQuote(State<StringReader> state) {
+  void fastParseDoubleQuote(State<String> state) {
     // v:'"' Spaces
     final $0 = state.pos;
     const $1 = '"';
-    matchLiteral1(state, 34, $1, const ErrorExpectedTags([$1]));
+    state.ok = state.pos < state.input.length &&
+        state.input.codeUnitAt(state.pos) == 34;
+    if (state.ok) {
+      state.pos++;
+    } else {
+      state.fail(const ErrorExpectedTags([$1]));
+    }
     if (state.ok) {
       // Spaces
       fastParseSpaces(state);
@@ -252,18 +282,34 @@ class ExpressionParser {
   /// Eof =
   ///   !.
   ///   ;
-  void fastParseEof(State<StringReader> state) {
+  void fastParseEof(State<String> state) {
     // !.
-    state.ok = state.pos >= state.input.length;
-    if (!state.ok) {
-      state.fail(const ErrorUnexpectedCharacter());
+    final $1 = state.pos;
+    final $4 = state.input;
+    if (state.pos < $4.length) {
+      final $3 = $4.runeAt(state.pos);
+      state.pos += $3 > 0xffff ? 2 : 1;
+      state.ok = true;
+    } else {
+      state.fail(const ErrorUnexpectedEndOfInput());
     }
+    state.ok = !state.ok;
+    if (!state.ok) {
+      final length = $1 - state.pos;
+      state.fail(switch (length) {
+        0 => const ErrorUnexpectedInput(0),
+        1 => const ErrorUnexpectedInput(1),
+        2 => const ErrorUnexpectedInput(2),
+        _ => ErrorUnexpectedInput(length)
+      });
+    }
+    state.pos = $1;
   }
 
   /// Exponent =
   ///   @errorHandler([-+]? [0-9]+)
   ///   ;
-  void fastParseExponent(State<StringReader> state) {
+  void fastParseExponent(State<String> state) {
     // @errorHandler([-+]? [0-9]+)
     final $1 = state.failPos;
     final $2 = state.errorCount;
@@ -271,36 +317,30 @@ class ExpressionParser {
     final $3 = state.pos;
     state.ok = state.pos < state.input.length;
     if (state.ok) {
-      final $4 = state.input.readChar(state.pos);
+      final $4 = state.input.codeUnitAt(state.pos);
       state.ok = $4 == 43 || $4 == 45;
       if (state.ok) {
-        state.pos += state.input.count;
+        state.pos++;
+      } else {
+        state.fail(const ErrorUnexpectedCharacter());
       }
-    }
-    if (!state.ok) {
-      state.fail(const ErrorUnexpectedCharacter());
+    } else {
+      state.fail(const ErrorUnexpectedEndOfInput());
     }
     state.ok = true;
     if (state.ok) {
-      var $5 = false;
-      while (true) {
-        state.ok = state.pos < state.input.length;
-        if (state.ok) {
-          final $6 = state.input.readChar(state.pos);
-          state.ok = $6 >= 48 && $6 <= 57;
-          if (state.ok) {
-            state.pos += state.input.count;
-          }
-        }
-        if (!state.ok) {
-          state.fail(const ErrorUnexpectedCharacter());
-        }
+      final $7 = state.pos;
+      final $6 = state.input;
+      while (state.pos < $6.length) {
+        final $5 = $6.codeUnitAt(state.pos);
+        state.ok = $5 >= 48 && $5 <= 57;
         if (!state.ok) {
           break;
         }
-        $5 = true;
+        state.pos++;
       }
-      state.ok = $5;
+      state.fail(const ErrorUnexpectedCharacter());
+      state.ok = state.pos > $7;
     }
     if (!state.ok) {
       state.pos = $3;
@@ -327,30 +367,23 @@ class ExpressionParser {
   /// Fraction =
   ///   @errorHandler([0-9]+)
   ///   ;
-  void fastParseFraction(State<StringReader> state) {
+  void fastParseFraction(State<String> state) {
     // @errorHandler([0-9]+)
     final $1 = state.failPos;
     final $2 = state.errorCount;
     // [0-9]+
-    var $4 = false;
-    while (true) {
-      state.ok = state.pos < state.input.length;
-      if (state.ok) {
-        final $5 = state.input.readChar(state.pos);
-        state.ok = $5 >= 48 && $5 <= 57;
-        if (state.ok) {
-          state.pos += state.input.count;
-        }
-      }
-      if (!state.ok) {
-        state.fail(const ErrorUnexpectedCharacter());
-      }
+    final $6 = state.pos;
+    final $5 = state.input;
+    while (state.pos < $5.length) {
+      final $4 = $5.codeUnitAt(state.pos);
+      state.ok = $4 >= 48 && $4 <= 57;
       if (!state.ok) {
         break;
       }
-      $4 = true;
+      state.pos++;
     }
-    state.ok = $4;
+    state.fail(const ErrorUnexpectedCharacter());
+    state.ok = state.pos > $6;
     if (!state.ok && state._canHandleError($1, $2)) {
       ParseError? error;
       // ignore: prefer_final_locals
@@ -373,11 +406,17 @@ class ExpressionParser {
   /// OpenParenthesis =
   ///   v:'(' Spaces
   ///   ;
-  void fastParseOpenParenthesis(State<StringReader> state) {
+  void fastParseOpenParenthesis(State<String> state) {
     // v:'(' Spaces
     final $0 = state.pos;
     const $1 = '(';
-    matchLiteral1(state, 40, $1, const ErrorExpectedTags([$1]));
+    state.ok = state.pos < state.input.length &&
+        state.input.codeUnitAt(state.pos) == 40;
+    if (state.ok) {
+      state.pos++;
+    } else {
+      state.fail(const ErrorExpectedTags([$1]));
+    }
     if (state.ok) {
       // Spaces
       fastParseSpaces(state);
@@ -390,11 +429,17 @@ class ExpressionParser {
   /// Question =
   ///   v:'?' Spaces
   ///   ;
-  void fastParseQuestion(State<StringReader> state) {
+  void fastParseQuestion(State<String> state) {
     // v:'?' Spaces
     final $0 = state.pos;
     const $1 = '?';
-    matchLiteral1(state, 63, $1, const ErrorExpectedTags([$1]));
+    state.ok = state.pos < state.input.length &&
+        state.input.codeUnitAt(state.pos) == 63;
+    if (state.ok) {
+      state.pos++;
+    } else {
+      state.fail(const ErrorExpectedTags([$1]));
+    }
     if (state.ok) {
       // Spaces
       fastParseSpaces(state);
@@ -407,15 +452,16 @@ class ExpressionParser {
   /// Spaces =
   ///   [ \n\r\t]*
   ///   ;
-  void fastParseSpaces(State<StringReader> state) {
+  void fastParseSpaces(State<String> state) {
     // [ \n\r\t]*
-    while (state.pos < state.input.length) {
-      final $1 = state.input.readChar(state.pos);
+    final $2 = state.input;
+    while (state.pos < $2.length) {
+      final $1 = $2.codeUnitAt(state.pos);
       state.ok = $1 == 13 || $1 >= 9 && $1 <= 10 || $1 == 32;
       if (!state.ok) {
         break;
       }
-      state.pos += state.input.count;
+      state.pos++;
     }
     state.fail(const ErrorUnexpectedCharacter());
     state.ok = true;
@@ -423,11 +469,11 @@ class ExpressionParser {
 
   /// Expression
   /// Additive =
-  ///   h:Multiplicative t:(op:AdditiveOp expr:Multiplicative)*
+  ///   h:Multiplicative t:(op:AdditiveOp expr:Multiplicative)* {}
   ///   ;
-  Expression? parseAdditive(State<StringReader> state) {
+  Expression? parseAdditive(State<String> state) {
     Expression? $0;
-    // h:Multiplicative t:(op:AdditiveOp expr:Multiplicative)*
+    // h:Multiplicative t:(op:AdditiveOp expr:Multiplicative)* {}
     final $1 = state.pos;
     Expression? $2;
     // Multiplicative
@@ -479,31 +525,30 @@ class ExpressionParser {
   /// AdditiveOp =
   ///   v:('-' / '+') Spaces
   ///   ;
-  String? parseAdditiveOp(State<StringReader> state) {
+  String? parseAdditiveOp(State<String> state) {
     String? $0;
     // v:('-' / '+') Spaces
     final $1 = state.pos;
     String? $2;
+    final $7 = state.pos;
     state.ok = false;
-    final $5 = state.input;
-    if (state.pos < $5.length) {
-      final $3 = $5.readChar(state.pos);
-      // ignore: unused_local_variable
-      final $4 = $5.count;
+    final $4 = state.input;
+    if (state.pos < $4.length) {
+      final $3 = $4.runeAt(state.pos);
+      state.pos += $3 > 0xffff ? 2 : 1;
       switch ($3) {
         case 45:
           state.ok = true;
-          state.pos += $4;
           $2 = '-';
           break;
         case 43:
           state.ok = true;
-          state.pos += $4;
           $2 = '+';
           break;
       }
     }
     if (!state.ok) {
+      state.pos = $7;
       state.fail(const ErrorExpectedTags(['-', '+']));
     }
     if (state.ok) {
@@ -522,61 +567,49 @@ class ExpressionParser {
   /// Arguments =
   ///   @sepBy((NamedArgument / PositionalArgument), Comma)
   ///   ;
-  List<({String name, Expression expr})>? parseArguments(
-      State<StringReader> state) {
+  List<({String name, Expression expr})>? parseArguments(State<String> state) {
     List<({String name, Expression expr})>? $0;
     // @sepBy((NamedArgument / PositionalArgument), Comma)
-    ({String name, Expression expr})? $4;
-    // (NamedArgument / PositionalArgument)
-    // NamedArgument
-    // NamedArgument
-    $4 = parseNamedArgument(state);
-    if (!state.ok) {
-      // PositionalArgument
-      // PositionalArgument
-      $4 = parsePositionalArgument(state);
-    }
-    if (!state.ok) {
-      state.ok = true;
-      $0 = const [];
-    } else {
-      final $3 = [$4!];
-      while (true) {
-        final $2 = state.pos;
-        // Comma
-        // Comma
-        fastParseComma(state);
-        if (!state.ok) {
-          state.ok = true;
-          $0 = $3;
-          break;
-        }
-        // (NamedArgument / PositionalArgument)
-        // NamedArgument
-        // NamedArgument
-        $4 = parseNamedArgument(state);
-        if (!state.ok) {
-          // PositionalArgument
-          // PositionalArgument
-          $4 = parsePositionalArgument(state);
-        }
-        if (!state.ok) {
-          state.pos = $2;
-          break;
-        }
-        $3.add($4!);
+    final $2 = <({String name, Expression expr})>[];
+    var $4 = state.pos;
+    while (true) {
+      ({String name, Expression expr})? $3;
+      // (NamedArgument / PositionalArgument)
+      // NamedArgument
+      // NamedArgument
+      $3 = parseNamedArgument(state);
+      if (!state.ok) {
+        // PositionalArgument
+        // PositionalArgument
+        $3 = parsePositionalArgument(state);
       }
+      if (!state.ok) {
+        state.pos = $4;
+        break;
+      }
+      $2.add($3!);
+      $4 = state.pos;
+      // Comma
+      // Comma
+      fastParseComma(state);
+      if (!state.ok) {
+        break;
+      }
+    }
+    state.ok = true;
+    if (state.ok) {
+      $0 = $2;
     }
     return $0;
   }
 
   /// Expression
   /// BitwiseAnd =
-  ///   h:Shift t:(op:BitwiseAndOp expr:Shift)*
+  ///   h:Shift t:(op:BitwiseAndOp expr:Shift)* {}
   ///   ;
-  Expression? parseBitwiseAnd(State<StringReader> state) {
+  Expression? parseBitwiseAnd(State<String> state) {
     Expression? $0;
-    // h:Shift t:(op:BitwiseAndOp expr:Shift)*
+    // h:Shift t:(op:BitwiseAndOp expr:Shift)* {}
     final $1 = state.pos;
     Expression? $2;
     // Shift
@@ -628,13 +661,20 @@ class ExpressionParser {
   /// BitwiseAndOp =
   ///   v:'&' Spaces
   ///   ;
-  String? parseBitwiseAndOp(State<StringReader> state) {
+  String? parseBitwiseAndOp(State<String> state) {
     String? $0;
     // v:'&' Spaces
     final $1 = state.pos;
     String? $2;
     const $3 = '&';
-    $2 = matchLiteral1(state, 38, $3, const ErrorExpectedTags([$3]));
+    state.ok = state.pos < state.input.length &&
+        state.input.codeUnitAt(state.pos) == 38;
+    if (state.ok) {
+      state.pos++;
+      $2 = $3;
+    } else {
+      state.fail(const ErrorExpectedTags([$3]));
+    }
     if (state.ok) {
       // Spaces
       fastParseSpaces(state);
@@ -650,11 +690,11 @@ class ExpressionParser {
 
   /// Expression
   /// BitwiseOr =
-  ///   h:BitwiseXor t:(op:BitwiseOrOp expr:BitwiseXor)*
+  ///   h:BitwiseXor t:(op:BitwiseOrOp expr:BitwiseXor)* {}
   ///   ;
-  Expression? parseBitwiseOr(State<StringReader> state) {
+  Expression? parseBitwiseOr(State<String> state) {
     Expression? $0;
-    // h:BitwiseXor t:(op:BitwiseOrOp expr:BitwiseXor)*
+    // h:BitwiseXor t:(op:BitwiseOrOp expr:BitwiseXor)* {}
     final $1 = state.pos;
     Expression? $2;
     // BitwiseXor
@@ -706,13 +746,20 @@ class ExpressionParser {
   /// BitwiseOrOp =
   ///   v:'|' Spaces
   ///   ;
-  String? parseBitwiseOrOp(State<StringReader> state) {
+  String? parseBitwiseOrOp(State<String> state) {
     String? $0;
     // v:'|' Spaces
     final $1 = state.pos;
     String? $2;
     const $3 = '|';
-    $2 = matchLiteral1(state, 124, $3, const ErrorExpectedTags([$3]));
+    state.ok = state.pos < state.input.length &&
+        state.input.codeUnitAt(state.pos) == 124;
+    if (state.ok) {
+      state.pos++;
+      $2 = $3;
+    } else {
+      state.fail(const ErrorExpectedTags([$3]));
+    }
     if (state.ok) {
       // Spaces
       fastParseSpaces(state);
@@ -728,11 +775,11 @@ class ExpressionParser {
 
   /// Expression
   /// BitwiseXor =
-  ///   h:BitwiseAnd t:(op:BitwiseXorOp expr:BitwiseAnd)*
+  ///   h:BitwiseAnd t:(op:BitwiseXorOp expr:BitwiseAnd)* {}
   ///   ;
-  Expression? parseBitwiseXor(State<StringReader> state) {
+  Expression? parseBitwiseXor(State<String> state) {
     Expression? $0;
-    // h:BitwiseAnd t:(op:BitwiseXorOp expr:BitwiseAnd)*
+    // h:BitwiseAnd t:(op:BitwiseXorOp expr:BitwiseAnd)* {}
     final $1 = state.pos;
     Expression? $2;
     // BitwiseAnd
@@ -784,13 +831,20 @@ class ExpressionParser {
   /// BitwiseXorOp =
   ///   v:'^' Spaces
   ///   ;
-  String? parseBitwiseXorOp(State<StringReader> state) {
+  String? parseBitwiseXorOp(State<String> state) {
     String? $0;
     // v:'^' Spaces
     final $1 = state.pos;
     String? $2;
     const $3 = '^';
-    $2 = matchLiteral1(state, 94, $3, const ErrorExpectedTags([$3]));
+    state.ok = state.pos < state.input.length &&
+        state.input.codeUnitAt(state.pos) == 94;
+    if (state.ok) {
+      state.pos++;
+      $2 = $3;
+    } else {
+      state.fail(const ErrorExpectedTags([$3]));
+    }
     if (state.ok) {
       // Spaces
       fastParseSpaces(state);
@@ -806,15 +860,22 @@ class ExpressionParser {
 
   /// Expression
   /// Boolean =
-  ///     'true' Spaces
-  ///   / 'false' Spaces
+  ///     'true' Spaces {}
+  ///   / 'false' Spaces {}
   ///   ;
-  Expression? parseBoolean(State<StringReader> state) {
+  Expression? parseBoolean(State<String> state) {
     Expression? $0;
-    // 'true' Spaces
-    final $3 = state.pos;
-    const $4 = 'true';
-    matchLiteral(state, $4, const ErrorExpectedTags([$4]));
+    // 'true' Spaces {}
+    final $1 = state.pos;
+    const $2 = 'true';
+    state.ok = state.pos < state.input.length &&
+        state.input.codeUnitAt(state.pos) == 116 &&
+        state.input.startsWith($2, state.pos);
+    if (state.ok) {
+      state.pos += 4;
+    } else {
+      state.fail(const ErrorExpectedTags([$2]));
+    }
     if (state.ok) {
       // Spaces
       fastParseSpaces(state);
@@ -825,13 +886,20 @@ class ExpressionParser {
       }
     }
     if (!state.ok) {
-      state.pos = $3;
+      state.pos = $1;
     }
     if (!state.ok) {
-      // 'false' Spaces
-      final $1 = state.pos;
-      const $2 = 'false';
-      matchLiteral(state, $2, const ErrorExpectedTags([$2]));
+      // 'false' Spaces {}
+      final $3 = state.pos;
+      const $4 = 'false';
+      state.ok = state.pos < state.input.length &&
+          state.input.codeUnitAt(state.pos) == 102 &&
+          state.input.startsWith($4, state.pos);
+      if (state.ok) {
+        state.pos += 5;
+      } else {
+        state.fail(const ErrorExpectedTags([$4]));
+      }
       if (state.ok) {
         // Spaces
         fastParseSpaces(state);
@@ -842,7 +910,7 @@ class ExpressionParser {
         }
       }
       if (!state.ok) {
-        state.pos = $1;
+        state.pos = $3;
       }
     }
     return $0;
@@ -850,35 +918,35 @@ class ExpressionParser {
 
   /// Expression
   /// Conditional =
-  ///     e1:IfNull Question e2:Expression Colon e3:Expression
+  ///     e1:IfNull Question e2:Expression Colon e3:Expression {}
   ///   / IfNull
   ///   ;
-  Expression? parseConditional(State<StringReader> state) {
+  Expression? parseConditional(State<String> state) {
     Expression? $0;
-    // e1:IfNull Question e2:Expression Colon e3:Expression
-    final $2 = state.pos;
-    Expression? $3;
+    // e1:IfNull Question e2:Expression Colon e3:Expression {}
+    final $1 = state.pos;
+    Expression? $2;
     // IfNull
-    $3 = parseIfNull(state);
+    $2 = parseIfNull(state);
     if (state.ok) {
       // Question
       fastParseQuestion(state);
       if (state.ok) {
-        Expression? $4;
+        Expression? $3;
         // Expression
-        $4 = parseExpression(state);
+        $3 = parseExpression(state);
         if (state.ok) {
           // Colon
           fastParseColon(state);
           if (state.ok) {
-            Expression? $5;
+            Expression? $4;
             // Expression
-            $5 = parseExpression(state);
+            $4 = parseExpression(state);
             if (state.ok) {
               Expression? $$;
-              final e1 = $3!;
-              final e2 = $4!;
-              final e3 = $5!;
+              final e1 = $2!;
+              final e2 = $3!;
+              final e3 = $4!;
               $$ = () => e1() as bool ? e2() : e3();
               $0 = $$;
             }
@@ -887,7 +955,7 @@ class ExpressionParser {
       }
     }
     if (!state.ok) {
-      state.pos = $2;
+      state.pos = $1;
     }
     if (!state.ok) {
       // IfNull
@@ -900,13 +968,20 @@ class ExpressionParser {
   /// Dot =
   ///   v:'.' Spaces
   ///   ;
-  String? parseDot(State<StringReader> state) {
+  String? parseDot(State<String> state) {
     String? $0;
     // v:'.' Spaces
     final $1 = state.pos;
     String? $2;
     const $3 = '.';
-    $2 = matchLiteral1(state, 46, $3, const ErrorExpectedTags([$3]));
+    state.ok = state.pos < state.input.length &&
+        state.input.codeUnitAt(state.pos) == 46;
+    if (state.ok) {
+      state.pos++;
+      $2 = $3;
+    } else {
+      state.fail(const ErrorExpectedTags([$3]));
+    }
     if (state.ok) {
       // Spaces
       fastParseSpaces(state);
@@ -922,11 +997,11 @@ class ExpressionParser {
 
   /// Expression
   /// Equality =
-  ///   h:Relational t:(op:EqualityOp expr:Relational)*
+  ///   h:Relational t:(op:EqualityOp expr:Relational)* {}
   ///   ;
-  Expression? parseEquality(State<StringReader> state) {
+  Expression? parseEquality(State<String> state) {
     Expression? $0;
-    // h:Relational t:(op:EqualityOp expr:Relational)*
+    // h:Relational t:(op:EqualityOp expr:Relational)* {}
     final $1 = state.pos;
     Expression? $2;
     // Relational
@@ -978,35 +1053,36 @@ class ExpressionParser {
   /// EqualityOp =
   ///   v:('==' / '!=') Spaces
   ///   ;
-  String? parseEqualityOp(State<StringReader> state) {
+  String? parseEqualityOp(State<String> state) {
     String? $0;
     // v:('==' / '!=') Spaces
     final $1 = state.pos;
     String? $2;
+    final $7 = state.pos;
     state.ok = false;
-    final $5 = state.input;
-    if (state.pos < $5.length) {
-      final $3 = $5.readChar(state.pos);
-      // ignore: unused_local_variable
-      final $4 = $5.count;
+    final $4 = state.input;
+    if (state.pos < $4.length) {
+      final $3 = $4.runeAt(state.pos);
+      state.pos += $3 > 0xffff ? 2 : 1;
       switch ($3) {
         case 61:
-          state.ok = $5.matchChar(61, state.pos + $4);
+          state.ok = state.pos < $4.length && $4.runeAt(state.pos) == 61;
           if (state.ok) {
-            state.pos += $4 + $5.count;
+            state.pos += 1;
             $2 = '==';
           }
           break;
         case 33:
-          state.ok = $5.matchChar(61, state.pos + $4);
+          state.ok = state.pos < $4.length && $4.runeAt(state.pos) == 61;
           if (state.ok) {
-            state.pos += $4 + $5.count;
+            state.pos += 1;
             $2 = '!=';
           }
           break;
       }
     }
     if (!state.ok) {
+      state.pos = $7;
       state.fail(const ErrorExpectedTags(['==', '!=']));
     }
     if (state.ok) {
@@ -1025,7 +1101,7 @@ class ExpressionParser {
   /// Expression =
   ///   Conditional
   ///   ;
-  Expression? parseExpression(State<StringReader> state) {
+  Expression? parseExpression(State<String> state) {
     Expression? $0;
     // Conditional
     // Conditional
@@ -1036,7 +1112,7 @@ class ExpressionParser {
   /// HexNumber =
   ///   @errorHandler(HexNumberRaw)
   ///   ;
-  int? parseHexNumber(State<StringReader> state) {
+  int? parseHexNumber(State<String> state) {
     int? $0;
     // @errorHandler(HexNumberRaw)
     final $2 = state.failPos;
@@ -1068,37 +1144,38 @@ class ExpressionParser {
 
   /// int
   /// HexNumberRaw =
-  ///   v:$([0-9A-Za-z]{4,4})
+  ///   v:$([0-9A-Za-z]{4,4}) {}
   ///   ;
-  int? parseHexNumberRaw(State<StringReader> state) {
+  int? parseHexNumberRaw(State<String> state) {
     int? $0;
-    // v:$([0-9A-Za-z]{4,4})
+    // v:$([0-9A-Za-z]{4,4}) {}
     String? $2;
     final $3 = state.pos;
     // [0-9A-Za-z]{4,4}
-    final $6 = state.pos;
-    var $7 = 0;
-    while ($7 < 4) {
+    final $5 = state.pos;
+    var $6 = 0;
+    while ($6 < 4) {
       state.ok = state.pos < state.input.length;
       if (state.ok) {
-        final $8 = state.input.readChar(state.pos);
+        final $7 = state.input.codeUnitAt(state.pos);
         state.ok =
-            $8 <= 90 ? $8 >= 48 && $8 <= 57 || $8 >= 65 : $8 >= 97 && $8 <= 122;
+            $7 <= 90 ? $7 >= 48 && $7 <= 57 || $7 >= 65 : $7 >= 97 && $7 <= 122;
         if (state.ok) {
-          state.pos += state.input.count;
+          state.pos++;
+        } else {
+          state.fail(const ErrorUnexpectedCharacter());
         }
-      }
-      if (!state.ok) {
-        state.fail(const ErrorUnexpectedCharacter());
+      } else {
+        state.fail(const ErrorUnexpectedEndOfInput());
       }
       if (!state.ok) {
         break;
       }
-      $7++;
+      $6++;
     }
-    state.ok = $7 == 4;
+    state.ok = $6 == 4;
     if (!state.ok) {
-      state.pos = $6;
+      state.pos = $5;
     }
     if (state.ok) {
       $2 = state.input.substring($3, state.pos);
@@ -1114,11 +1191,11 @@ class ExpressionParser {
 
   /// Expression
   /// Identifier =
-  ///   v:IdentifierRaw
+  ///   v:IdentifierRaw {}
   ///   ;
-  Expression? parseIdentifier(State<StringReader> state) {
+  Expression? parseIdentifier(State<String> state) {
     Expression? $0;
-    // v:IdentifierRaw
+    // v:IdentifierRaw {}
     String? $2;
     // IdentifierRaw
     $2 = parseIdentifierRaw(state);
@@ -1140,7 +1217,7 @@ class ExpressionParser {
   /// IdentifierRaw =
   ///   v:@errorHandler($([a-zA-Z_$] [a-zA-Z_$0-9]*)) Spaces
   ///   ;
-  String? parseIdentifierRaw(State<StringReader> state) {
+  String? parseIdentifierRaw(State<String> state) {
     String? $0;
     // v:@errorHandler($([a-zA-Z_$] [a-zA-Z_$0-9]*)) Spaces
     final $1 = state.pos;
@@ -1153,19 +1230,21 @@ class ExpressionParser {
     final $7 = state.pos;
     state.ok = state.pos < state.input.length;
     if (state.ok) {
-      final $8 = state.input.readChar(state.pos);
+      final $8 = state.input.codeUnitAt(state.pos);
       state.ok =
           $8 <= 90 ? $8 == 36 || $8 >= 65 : $8 == 95 || $8 >= 97 && $8 <= 122;
       if (state.ok) {
-        state.pos += state.input.count;
+        state.pos++;
+      } else {
+        state.fail(const ErrorUnexpectedCharacter());
       }
-    }
-    if (!state.ok) {
-      state.fail(const ErrorUnexpectedCharacter());
+    } else {
+      state.fail(const ErrorUnexpectedEndOfInput());
     }
     if (state.ok) {
-      while (state.pos < state.input.length) {
-        final $9 = state.input.readChar(state.pos);
+      final $10 = state.input;
+      while (state.pos < $10.length) {
+        final $9 = $10.codeUnitAt(state.pos);
         state.ok = $9 <= 90
             ? $9 <= 57
                 ? $9 == 36 || $9 >= 48
@@ -1174,7 +1253,7 @@ class ExpressionParser {
         if (!state.ok) {
           break;
         }
-        state.pos += state.input.count;
+        state.pos++;
       }
       state.fail(const ErrorUnexpectedCharacter());
       state.ok = true;
@@ -1219,11 +1298,11 @@ class ExpressionParser {
 
   /// Expression
   /// IfNull =
-  ///   h:LogicalOr t:(op:IfNullOp expr:LogicalOr)*
+  ///   h:LogicalOr t:(op:IfNullOp expr:LogicalOr)* {}
   ///   ;
-  Expression? parseIfNull(State<StringReader> state) {
+  Expression? parseIfNull(State<String> state) {
     Expression? $0;
-    // h:LogicalOr t:(op:IfNullOp expr:LogicalOr)*
+    // h:LogicalOr t:(op:IfNullOp expr:LogicalOr)* {}
     final $1 = state.pos;
     Expression? $2;
     // LogicalOr
@@ -1275,13 +1354,21 @@ class ExpressionParser {
   /// IfNullOp =
   ///   v:'??' Spaces
   ///   ;
-  String? parseIfNullOp(State<StringReader> state) {
+  String? parseIfNullOp(State<String> state) {
     String? $0;
     // v:'??' Spaces
     final $1 = state.pos;
     String? $2;
     const $3 = '??';
-    $2 = matchLiteral(state, $3, const ErrorExpectedTags([$3]));
+    state.ok = state.pos < state.input.length &&
+        state.input.codeUnitAt(state.pos) == 63 &&
+        state.input.startsWith($3, state.pos);
+    if (state.ok) {
+      state.pos += 2;
+      $2 = $3;
+    } else {
+      state.fail(const ErrorExpectedTags([$3]));
+    }
     if (state.ok) {
       // Spaces
       fastParseSpaces(state);
@@ -1297,11 +1384,11 @@ class ExpressionParser {
 
   /// Expression
   /// LogicalAnd =
-  ///   h:Equality t:(op:LogicalAndOp expr:Equality)*
+  ///   h:Equality t:(op:LogicalAndOp expr:Equality)* {}
   ///   ;
-  Expression? parseLogicalAnd(State<StringReader> state) {
+  Expression? parseLogicalAnd(State<String> state) {
     Expression? $0;
-    // h:Equality t:(op:LogicalAndOp expr:Equality)*
+    // h:Equality t:(op:LogicalAndOp expr:Equality)* {}
     final $1 = state.pos;
     Expression? $2;
     // Equality
@@ -1353,13 +1440,21 @@ class ExpressionParser {
   /// LogicalAndOp =
   ///   v:'&&' Spaces
   ///   ;
-  String? parseLogicalAndOp(State<StringReader> state) {
+  String? parseLogicalAndOp(State<String> state) {
     String? $0;
     // v:'&&' Spaces
     final $1 = state.pos;
     String? $2;
     const $3 = '&&';
-    $2 = matchLiteral(state, $3, const ErrorExpectedTags([$3]));
+    state.ok = state.pos < state.input.length &&
+        state.input.codeUnitAt(state.pos) == 38 &&
+        state.input.startsWith($3, state.pos);
+    if (state.ok) {
+      state.pos += 2;
+      $2 = $3;
+    } else {
+      state.fail(const ErrorExpectedTags([$3]));
+    }
     if (state.ok) {
       // Spaces
       fastParseSpaces(state);
@@ -1375,11 +1470,11 @@ class ExpressionParser {
 
   /// Expression
   /// LogicalOr =
-  ///   h:LogicalAnd t:(op:LogicalOrOp expr:LogicalAnd)*
+  ///   h:LogicalAnd t:(op:LogicalOrOp expr:LogicalAnd)* {}
   ///   ;
-  Expression? parseLogicalOr(State<StringReader> state) {
+  Expression? parseLogicalOr(State<String> state) {
     Expression? $0;
-    // h:LogicalAnd t:(op:LogicalOrOp expr:LogicalAnd)*
+    // h:LogicalAnd t:(op:LogicalOrOp expr:LogicalAnd)* {}
     final $1 = state.pos;
     Expression? $2;
     // LogicalAnd
@@ -1431,13 +1526,21 @@ class ExpressionParser {
   /// LogicalOrOp =
   ///   v:'||' Spaces
   ///   ;
-  String? parseLogicalOrOp(State<StringReader> state) {
+  String? parseLogicalOrOp(State<String> state) {
     String? $0;
     // v:'||' Spaces
     final $1 = state.pos;
     String? $2;
     const $3 = '||';
-    $2 = matchLiteral(state, $3, const ErrorExpectedTags([$3]));
+    state.ok = state.pos < state.input.length &&
+        state.input.codeUnitAt(state.pos) == 124 &&
+        state.input.startsWith($3, state.pos);
+    if (state.ok) {
+      state.pos += 2;
+      $2 = $3;
+    } else {
+      state.fail(const ErrorExpectedTags([$3]));
+    }
     if (state.ok) {
       // Spaces
       fastParseSpaces(state);
@@ -1453,11 +1556,11 @@ class ExpressionParser {
 
   /// Expression
   /// Multiplicative =
-  ///   h:UnaryPrefix t:(op:MultiplicativeOp expr:UnaryPrefix)*
+  ///   h:UnaryPrefix t:(op:MultiplicativeOp expr:UnaryPrefix)* {}
   ///   ;
-  Expression? parseMultiplicative(State<StringReader> state) {
+  Expression? parseMultiplicative(State<String> state) {
     Expression? $0;
-    // h:UnaryPrefix t:(op:MultiplicativeOp expr:UnaryPrefix)*
+    // h:UnaryPrefix t:(op:MultiplicativeOp expr:UnaryPrefix)* {}
     final $1 = state.pos;
     Expression? $2;
     // UnaryPrefix
@@ -1509,43 +1612,41 @@ class ExpressionParser {
   /// MultiplicativeOp =
   ///   v:('/' / '*' / '%' / '~/') Spaces
   ///   ;
-  String? parseMultiplicativeOp(State<StringReader> state) {
+  String? parseMultiplicativeOp(State<String> state) {
     String? $0;
     // v:('/' / '*' / '%' / '~/') Spaces
     final $1 = state.pos;
     String? $2;
+    final $9 = state.pos;
     state.ok = false;
-    final $5 = state.input;
-    if (state.pos < $5.length) {
-      final $3 = $5.readChar(state.pos);
-      // ignore: unused_local_variable
-      final $4 = $5.count;
+    final $4 = state.input;
+    if (state.pos < $4.length) {
+      final $3 = $4.runeAt(state.pos);
+      state.pos += $3 > 0xffff ? 2 : 1;
       switch ($3) {
         case 47:
           state.ok = true;
-          state.pos += $4;
           $2 = '/';
           break;
         case 42:
           state.ok = true;
-          state.pos += $4;
           $2 = '*';
           break;
         case 37:
           state.ok = true;
-          state.pos += $4;
           $2 = '%';
           break;
         case 126:
-          state.ok = $5.matchChar(47, state.pos + $4);
+          state.ok = state.pos < $4.length && $4.runeAt(state.pos) == 47;
           if (state.ok) {
-            state.pos += $4 + $5.count;
+            state.pos += 1;
             $2 = '~/';
           }
           break;
       }
     }
     if (!state.ok) {
+      state.pos = $9;
       state.fail(const ErrorExpectedTags(['/', '*', '%', '~/']));
     }
     if (state.ok) {
@@ -1564,8 +1665,7 @@ class ExpressionParser {
   /// NamedArgument =
   ///   name:IdentifierRaw Colon expr:Expression
   ///   ;
-  ({String name, Expression expr})? parseNamedArgument(
-      State<StringReader> state) {
+  ({String name, Expression expr})? parseNamedArgument(State<String> state) {
     ({String name, Expression expr})? $0;
     // name:IdentifierRaw Colon expr:Expression
     final $1 = state.pos;
@@ -1592,14 +1692,21 @@ class ExpressionParser {
 
   /// Expression
   /// Null =
-  ///   'null' Spaces
+  ///   'null' Spaces {}
   ///   ;
-  Expression? parseNull(State<StringReader> state) {
+  Expression? parseNull(State<String> state) {
     Expression? $0;
-    // 'null' Spaces
+    // 'null' Spaces {}
     final $1 = state.pos;
     const $2 = 'null';
-    matchLiteral(state, $2, const ErrorExpectedTags([$2]));
+    state.ok = state.pos < state.input.length &&
+        state.input.codeUnitAt(state.pos) == 110 &&
+        state.input.startsWith($2, state.pos);
+    if (state.ok) {
+      state.pos += 4;
+    } else {
+      state.fail(const ErrorExpectedTags([$2]));
+    }
     if (state.ok) {
       // Spaces
       fastParseSpaces(state);
@@ -1619,7 +1726,7 @@ class ExpressionParser {
   /// Number =
   ///   v:@errorHandler(NumberRaw) Spaces
   ///   ;
-  Expression? parseNumber(State<StringReader> state) {
+  Expression? parseNumber(State<String> state) {
     Expression? $0;
     // v:@errorHandler(NumberRaw) Spaces
     final $1 = state.pos;
@@ -1666,82 +1773,103 @@ class ExpressionParser {
 
   /// Expression
   /// NumberRaw =
-  ///   v:$([-]? ([0] / [1-9] [0-9]*) ([.] Fraction)? ([eE] Exponent)?)
+  ///   v:$([-]? ([0] / [1-9] [0-9]*) ([.] Fraction)? ([eE] Exponent)?) {}
   ///   ;
-  Expression? parseNumberRaw(State<StringReader> state) {
+  Expression? parseNumberRaw(State<String> state) {
     Expression? $0;
-    // v:$([-]? ([0] / [1-9] [0-9]*) ([.] Fraction)? ([eE] Exponent)?)
+    // v:$([-]? ([0] / [1-9] [0-9]*) ([.] Fraction)? ([eE] Exponent)?) {}
     String? $2;
     final $3 = state.pos;
     // [-]? ([0] / [1-9] [0-9]*) ([.] Fraction)? ([eE] Exponent)?
     final $4 = state.pos;
-    matchChar(state, 45, const ErrorUnexpectedCharacter(45));
+    state.ok = state.pos < state.input.length &&
+        state.input.codeUnitAt(state.pos) == 45;
+    if (state.ok) {
+      state.pos++;
+    } else {
+      state.fail(const ErrorExpectedCharacter(45));
+    }
     state.ok = true;
     if (state.ok) {
       // [0]
-      matchChar(state, 48, const ErrorUnexpectedCharacter(48));
+      state.ok = state.pos < state.input.length &&
+          state.input.codeUnitAt(state.pos) == 48;
+      if (state.ok) {
+        state.pos++;
+      } else {
+        state.fail(const ErrorExpectedCharacter(48));
+      }
       if (!state.ok) {
         // [1-9] [0-9]*
-        final $5 = state.pos;
+        final $6 = state.pos;
         state.ok = state.pos < state.input.length;
         if (state.ok) {
-          final $6 = state.input.readChar(state.pos);
-          state.ok = $6 >= 49 && $6 <= 57;
+          final $7 = state.input.codeUnitAt(state.pos);
+          state.ok = $7 >= 49 && $7 <= 57;
           if (state.ok) {
-            state.pos += state.input.count;
+            state.pos++;
+          } else {
+            state.fail(const ErrorUnexpectedCharacter());
           }
-        }
-        if (!state.ok) {
-          state.fail(const ErrorUnexpectedCharacter());
+        } else {
+          state.fail(const ErrorUnexpectedEndOfInput());
         }
         if (state.ok) {
-          while (state.pos < state.input.length) {
-            final $7 = state.input.readChar(state.pos);
-            state.ok = $7 >= 48 && $7 <= 57;
+          final $9 = state.input;
+          while (state.pos < $9.length) {
+            final $8 = $9.codeUnitAt(state.pos);
+            state.ok = $8 >= 48 && $8 <= 57;
             if (!state.ok) {
               break;
             }
-            state.pos += state.input.count;
+            state.pos++;
           }
           state.fail(const ErrorUnexpectedCharacter());
           state.ok = true;
         }
         if (!state.ok) {
-          state.pos = $5;
+          state.pos = $6;
         }
       }
       if (state.ok) {
         // [.] Fraction
-        final $9 = state.pos;
-        matchChar(state, 46, const ErrorUnexpectedCharacter(46));
+        final $10 = state.pos;
+        state.ok = state.pos < state.input.length &&
+            state.input.codeUnitAt(state.pos) == 46;
+        if (state.ok) {
+          state.pos++;
+        } else {
+          state.fail(const ErrorExpectedCharacter(46));
+        }
         if (state.ok) {
           // Fraction
           fastParseFraction(state);
         }
         if (!state.ok) {
-          state.pos = $9;
+          state.pos = $10;
         }
         state.ok = true;
         if (state.ok) {
           // [eE] Exponent
-          final $10 = state.pos;
+          final $11 = state.pos;
           state.ok = state.pos < state.input.length;
           if (state.ok) {
-            final $11 = state.input.readChar(state.pos);
-            state.ok = $11 == 69 || $11 == 101;
+            final $12 = state.input.codeUnitAt(state.pos);
+            state.ok = $12 == 69 || $12 == 101;
             if (state.ok) {
-              state.pos += state.input.count;
+              state.pos++;
+            } else {
+              state.fail(const ErrorUnexpectedCharacter());
             }
-          }
-          if (!state.ok) {
-            state.fail(const ErrorUnexpectedCharacter());
+          } else {
+            state.fail(const ErrorUnexpectedEndOfInput());
           }
           if (state.ok) {
             // Exponent
             fastParseExponent(state);
           }
           if (!state.ok) {
-            state.pos = $10;
+            state.pos = $11;
           }
           state.ok = true;
         }
@@ -1766,13 +1894,20 @@ class ExpressionParser {
   /// OpenBracket =
   ///   v:'[' Spaces
   ///   ;
-  String? parseOpenBracket(State<StringReader> state) {
+  String? parseOpenBracket(State<String> state) {
     String? $0;
     // v:'[' Spaces
     final $1 = state.pos;
     String? $2;
     const $3 = '[';
-    $2 = matchLiteral1(state, 91, $3, const ErrorExpectedTags([$3]));
+    state.ok = state.pos < state.input.length &&
+        state.input.codeUnitAt(state.pos) == 91;
+    if (state.ok) {
+      state.pos++;
+      $2 = $3;
+    } else {
+      state.fail(const ErrorExpectedTags([$3]));
+    }
     if (state.ok) {
       // Spaces
       fastParseSpaces(state);
@@ -1789,13 +1924,20 @@ class ExpressionParser {
   /// OpenParenthesis =
   ///   v:'(' Spaces
   ///   ;
-  String? parseOpenParenthesis(State<StringReader> state) {
+  String? parseOpenParenthesis(State<String> state) {
     String? $0;
     // v:'(' Spaces
     final $1 = state.pos;
     String? $2;
     const $3 = '(';
-    $2 = matchLiteral1(state, 40, $3, const ErrorExpectedTags([$3]));
+    state.ok = state.pos < state.input.length &&
+        state.input.codeUnitAt(state.pos) == 40;
+    if (state.ok) {
+      state.pos++;
+      $2 = $3;
+    } else {
+      state.fail(const ErrorExpectedTags([$3]));
+    }
     if (state.ok) {
       // Spaces
       fastParseSpaces(state);
@@ -1813,7 +1955,7 @@ class ExpressionParser {
   ///   name:'' expr:Expression
   ///   ;
   ({String name, Expression expr})? parsePositionalArgument(
-      State<StringReader> state) {
+      State<String> state) {
     ({String name, Expression expr})? $0;
     // name:'' expr:Expression
     final $1 = state.pos;
@@ -1844,7 +1986,7 @@ class ExpressionParser {
   ///   / Identifier
   ///   / OpenParenthesis v:Expression CloseParenthesis
   ///   ;
-  Expression? parsePrimary(State<StringReader> state) {
+  Expression? parsePrimary(State<String> state) {
     Expression? $0;
     // Number
     // Number
@@ -1867,23 +2009,23 @@ class ExpressionParser {
             $0 = parseIdentifier(state);
             if (!state.ok) {
               // OpenParenthesis v:Expression CloseParenthesis
-              final $1 = state.pos;
+              final $6 = state.pos;
               // OpenParenthesis
               fastParseOpenParenthesis(state);
               if (state.ok) {
-                Expression? $2;
+                Expression? $7;
                 // Expression
-                $2 = parseExpression(state);
+                $7 = parseExpression(state);
                 if (state.ok) {
                   // CloseParenthesis
                   fastParseCloseParenthesis(state);
                   if (state.ok) {
-                    $0 = $2;
+                    $0 = $7;
                   }
                 }
               }
               if (!state.ok) {
-                state.pos = $1;
+                state.pos = $6;
               }
             }
           }
@@ -1895,11 +2037,11 @@ class ExpressionParser {
 
   /// Expression
   /// Relational =
-  ///   h:BitwiseOr t:(op:RelationalOp expr:BitwiseOr)*
+  ///   h:BitwiseOr t:(op:RelationalOp expr:BitwiseOr)* {}
   ///   ;
-  Expression? parseRelational(State<StringReader> state) {
+  Expression? parseRelational(State<String> state) {
     Expression? $0;
-    // h:BitwiseOr t:(op:RelationalOp expr:BitwiseOr)*
+    // h:BitwiseOr t:(op:RelationalOp expr:BitwiseOr)* {}
     final $1 = state.pos;
     Expression? $2;
     // BitwiseOr
@@ -1951,43 +2093,42 @@ class ExpressionParser {
   /// RelationalOp =
   ///   v:('>=' / '>' / '<=' / '<') Spaces
   ///   ;
-  String? parseRelationalOp(State<StringReader> state) {
+  String? parseRelationalOp(State<String> state) {
     String? $0;
     // v:('>=' / '>' / '<=' / '<') Spaces
     final $1 = state.pos;
     String? $2;
+    final $9 = state.pos;
     state.ok = false;
-    final $5 = state.input;
-    if (state.pos < $5.length) {
-      final $3 = $5.readChar(state.pos);
-      // ignore: unused_local_variable
-      final $4 = $5.count;
+    final $4 = state.input;
+    if (state.pos < $4.length) {
+      final $3 = $4.runeAt(state.pos);
+      state.pos += $3 > 0xffff ? 2 : 1;
       switch ($3) {
         case 62:
-          state.ok = $5.matchChar(61, state.pos + $4);
+          state.ok = state.pos < $4.length && $4.runeAt(state.pos) == 61;
           if (state.ok) {
-            state.pos += $4 + $5.count;
+            state.pos += 1;
             $2 = '>=';
           } else {
             state.ok = true;
-            state.pos += $4;
             $2 = '>';
           }
           break;
         case 60:
-          state.ok = $5.matchChar(61, state.pos + $4);
+          state.ok = state.pos < $4.length && $4.runeAt(state.pos) == 61;
           if (state.ok) {
-            state.pos += $4 + $5.count;
+            state.pos += 1;
             $2 = '<=';
           } else {
             state.ok = true;
-            state.pos += $4;
             $2 = '<';
           }
           break;
       }
     }
     if (!state.ok) {
+      state.pos = $9;
       state.fail(const ErrorExpectedTags(['>=', '>', '<=', '<']));
     }
     if (state.ok) {
@@ -2009,23 +2150,23 @@ class ExpressionParser {
   ///   / kind:OpenBracket arguments:Expression CloseBracket
   ///   / kind:OpenParenthesis arguments:Arguments CloseParenthesis
   ///   ;
-  ({String kind, dynamic arguments})? parseSelector(State<StringReader> state) {
+  ({String kind, dynamic arguments})? parseSelector(State<String> state) {
     ({String kind, dynamic arguments})? $0;
     // kind:Dot arguments:IdentifierRaw
-    final $7 = state.pos;
-    String? $8;
+    final $1 = state.pos;
+    String? $2;
     // Dot
-    $8 = parseDot(state);
+    $2 = parseDot(state);
     if (state.ok) {
-      String? $9;
+      String? $3;
       // IdentifierRaw
-      $9 = parseIdentifierRaw(state);
+      $3 = parseIdentifierRaw(state);
       if (state.ok) {
-        $0 = (kind: $8!, arguments: $9!);
+        $0 = (kind: $2!, arguments: $3!);
       }
     }
     if (!state.ok) {
-      state.pos = $7;
+      state.pos = $1;
     }
     if (!state.ok) {
       // kind:OpenBracket arguments:Expression CloseBracket
@@ -2050,24 +2191,24 @@ class ExpressionParser {
       }
       if (!state.ok) {
         // kind:OpenParenthesis arguments:Arguments CloseParenthesis
-        final $1 = state.pos;
-        String? $2;
+        final $7 = state.pos;
+        String? $8;
         // OpenParenthesis
-        $2 = parseOpenParenthesis(state);
+        $8 = parseOpenParenthesis(state);
         if (state.ok) {
-          List<({String name, Expression expr})>? $3;
+          List<({String name, Expression expr})>? $9;
           // Arguments
-          $3 = parseArguments(state);
+          $9 = parseArguments(state);
           if (state.ok) {
             // CloseParenthesis
             fastParseCloseParenthesis(state);
             if (state.ok) {
-              $0 = (kind: $2!, arguments: $3!);
+              $0 = (kind: $8!, arguments: $9!);
             }
           }
         }
         if (!state.ok) {
-          state.pos = $1;
+          state.pos = $7;
         }
       }
     }
@@ -2076,11 +2217,11 @@ class ExpressionParser {
 
   /// Expression
   /// Shift =
-  ///   h:Additive t:(op:ShiftOp expr:Additive)*
+  ///   h:Additive t:(op:ShiftOp expr:Additive)* {}
   ///   ;
-  Expression? parseShift(State<StringReader> state) {
+  Expression? parseShift(State<String> state) {
     Expression? $0;
-    // h:Additive t:(op:ShiftOp expr:Additive)*
+    // h:Additive t:(op:ShiftOp expr:Additive)* {}
     final $1 = state.pos;
     Expression? $2;
     // Additive
@@ -2132,35 +2273,35 @@ class ExpressionParser {
   /// ShiftOp =
   ///   v:('<<' / '>>>' / '>>') Spaces
   ///   ;
-  String? parseShiftOp(State<StringReader> state) {
+  String? parseShiftOp(State<String> state) {
     String? $0;
     // v:('<<' / '>>>' / '>>') Spaces
     final $1 = state.pos;
     String? $2;
+    final $8 = state.pos;
     state.ok = false;
-    final $5 = state.input;
-    if (state.pos < $5.length) {
-      final $3 = $5.readChar(state.pos);
-      // ignore: unused_local_variable
-      final $4 = $5.count;
+    final $4 = state.input;
+    if (state.pos < $4.length) {
+      final $3 = $4.runeAt(state.pos);
+      state.pos += $3 > 0xffff ? 2 : 1;
       switch ($3) {
         case 60:
-          state.ok = $5.matchChar(60, state.pos + $4);
+          state.ok = state.pos < $4.length && $4.runeAt(state.pos) == 60;
           if (state.ok) {
-            state.pos += $4 + $5.count;
+            state.pos += 1;
             $2 = '<<';
           }
           break;
         case 62:
-          const $7 = '>>>';
-          state.ok = $5.startsWith($7, state.pos);
+          const $6 = '>>>';
+          state.ok = $4.startsWith($6, state.pos - 1);
           if (state.ok) {
-            state.pos += $5.count;
-            $2 = $7;
+            state.pos += 2;
+            $2 = $6;
           } else {
-            state.ok = $5.matchChar(62, state.pos + $4);
+            state.ok = state.pos < $4.length && $4.runeAt(state.pos) == 62;
             if (state.ok) {
-              state.pos += $4 + $5.count;
+              state.pos += 1;
               $2 = '>>';
             }
           }
@@ -2168,6 +2309,7 @@ class ExpressionParser {
       }
     }
     if (!state.ok) {
+      state.pos = $8;
       state.fail(const ErrorExpectedTags(['<<', '>>>', '>>']));
     }
     if (state.ok) {
@@ -2186,7 +2328,7 @@ class ExpressionParser {
   /// Start =
   ///   Spaces v:Expression Eof
   ///   ;
-  Expression? parseStart(State<StringReader> state) {
+  Expression? parseStart(State<String> state) {
     Expression? $0;
     // Spaces v:Expression Eof
     final $1 = state.pos;
@@ -2212,11 +2354,11 @@ class ExpressionParser {
 
   /// Expression
   /// String =
-  ///   v:StringRaw
+  ///   v:StringRaw {}
   ///   ;
-  Expression? parseString(State<StringReader> state) {
+  Expression? parseString(State<String> state) {
     Expression? $0;
-    // v:StringRaw
+    // v:StringRaw {}
     String? $2;
     // StringRaw
     $2 = parseStringRaw(state);
@@ -2234,95 +2376,101 @@ class ExpressionParser {
   ///     $[ -!#-[\]-\u{10ffff}]+
   ///   / '\\' v:(EscapeChar / EscapeHex)
   ///   ;
-  String? parseStringChars(State<StringReader> state) {
+  String? parseStringChars(State<String> state) {
     String? $0;
     // $[ -!#-[\]-\u{10ffff}]+
-    final $13 = state.pos;
-    var $14 = false;
-    while (true) {
-      state.ok = state.pos < state.input.length;
-      if (state.ok) {
-        final $15 = state.input.readChar(state.pos);
-        state.ok = $15 <= 91
-            ? $15 >= 32 && $15 <= 33 || $15 >= 35
-            : $15 >= 93 && $15 <= 1114111;
-        if (state.ok) {
-          state.pos += state.input.count;
-        }
-      }
-      if (!state.ok) {
-        state.fail(const ErrorUnexpectedCharacter());
-      }
+    final $2 = state.pos;
+    final $5 = state.pos;
+    final $4 = state.input;
+    while (state.pos < $4.length) {
+      final $3 = $4.runeAt(state.pos);
+      state.ok = $3 <= 91
+          ? $3 >= 32 && $3 <= 33 || $3 >= 35
+          : $3 >= 93 && $3 <= 1114111;
       if (!state.ok) {
         break;
       }
-      $14 = true;
+      state.pos += $3 > 0xffff ? 2 : 1;
     }
-    state.ok = $14;
+    state.fail(const ErrorUnexpectedCharacter());
+    state.ok = state.pos > $5;
     if (state.ok) {
-      $0 = state.input.substring($13, state.pos);
+      $0 = state.input.substring($2, state.pos);
     }
     if (!state.ok) {
       // '\\' v:(EscapeChar / EscapeHex)
-      final $1 = state.pos;
-      const $3 = '\\';
-      matchLiteral1(state, 92, $3, const ErrorExpectedTags([$3]));
+      final $6 = state.pos;
+      const $8 = '\\';
+      state.ok = state.pos < state.input.length &&
+          state.input.codeUnitAt(state.pos) == 92;
       if (state.ok) {
-        String? $2;
+        state.pos++;
+      } else {
+        state.fail(const ErrorExpectedTags([$8]));
+      }
+      if (state.ok) {
+        String? $7;
         // EscapeChar
-        // String @inline EscapeChar = c:["/bfnrt\\] ;
-        // c:["/bfnrt\\]
-        int? $10;
+        // String @inline EscapeChar = c:["/bfnrt\\] {} ;
+        // c:["/bfnrt\\] {}
+        int? $11;
         state.ok = state.pos < state.input.length;
         if (state.ok) {
-          final $11 = state.input.readChar(state.pos);
-          state.ok = $11 == 98 ||
-              ($11 < 98
-                  ? $11 == 47 || $11 == 34 || $11 == 92
-                  : $11 == 110 ||
-                      ($11 < 110 ? $11 == 102 : $11 == 114 || $11 == 116));
+          final $12 = state.input.codeUnitAt(state.pos);
+          state.ok = $12 == 98 ||
+              ($12 < 98
+                  ? $12 == 47 || $12 == 34 || $12 == 92
+                  : $12 == 110 ||
+                      ($12 < 110 ? $12 == 102 : $12 == 114 || $12 == 116));
           if (state.ok) {
-            state.pos += state.input.count;
-            $10 = $11;
+            state.pos++;
+            $11 = $12;
+          } else {
+            state.fail(const ErrorUnexpectedCharacter());
           }
-        }
-        if (!state.ok) {
-          state.fail(const ErrorUnexpectedCharacter());
+        } else {
+          state.fail(const ErrorUnexpectedEndOfInput());
         }
         if (state.ok) {
           String? $$;
-          final c = $10!;
+          final c = $11!;
           $$ = _escape(c);
-          $2 = $$;
+          $7 = $$;
         }
         if (!state.ok) {
           // EscapeHex
-          // String @inline EscapeHex = 'u' v:HexNumber ;
-          // 'u' v:HexNumber
-          final $5 = state.pos;
-          const $7 = 'u';
-          matchLiteral1(state, 117, $7, const ErrorExpectedTags([$7]));
+          // String @inline EscapeHex = 'u' v:HexNumber {} ;
+          // 'u' v:HexNumber {}
+          final $14 = state.pos;
+          const $16 = 'u';
+          state.ok = state.pos < state.input.length &&
+              state.input.codeUnitAt(state.pos) == 117;
           if (state.ok) {
-            int? $6;
+            state.pos++;
+          } else {
+            state.fail(const ErrorExpectedTags([$16]));
+          }
+          if (state.ok) {
+            int? $15;
             // HexNumber
-            $6 = parseHexNumber(state);
+            $15 = parseHexNumber(state);
             if (state.ok) {
               String? $$;
-              final v = $6!;
+              final v = $15!;
               $$ = String.fromCharCode(v);
-              $2 = $$;
+              $7 = $$;
             }
           }
           if (!state.ok) {
-            state.pos = $5;
+            state.pos = $14;
           }
         }
         if (state.ok) {
-          $0 = $2;
+          $0 = $7;
         }
       }
       if (!state.ok) {
-        state.pos = $1;
+        state.pos = $6;
       }
     }
     return $0;
@@ -2330,14 +2478,20 @@ class ExpressionParser {
 
   /// String
   /// StringRaw =
-  ///   '"' v:StringChars* DoubleQuote
+  ///   '"' v:StringChars* DoubleQuote {}
   ///   ;
-  String? parseStringRaw(State<StringReader> state) {
+  String? parseStringRaw(State<String> state) {
     String? $0;
-    // '"' v:StringChars* DoubleQuote
+    // '"' v:StringChars* DoubleQuote {}
     final $1 = state.pos;
     const $3 = '"';
-    matchLiteral1(state, 34, $3, const ErrorExpectedTags([$3]));
+    state.ok = state.pos < state.input.length &&
+        state.input.codeUnitAt(state.pos) == 34;
+    if (state.ok) {
+      state.pos++;
+    } else {
+      state.fail(const ErrorExpectedTags([$3]));
+    }
     if (state.ok) {
       List<String>? $2;
       final $4 = <String>[];
@@ -2373,11 +2527,11 @@ class ExpressionParser {
 
   /// Expression
   /// UnaryPostfix =
-  ///   object:Primary selectors:Selector*
+  ///   object:Primary selectors:Selector* {}
   ///   ;
-  Expression? parseUnaryPostfix(State<StringReader> state) {
+  Expression? parseUnaryPostfix(State<String> state) {
     Expression? $0;
-    // object:Primary selectors:Selector*
+    // object:Primary selectors:Selector* {}
     final $1 = state.pos;
     Expression? $2;
     // Primary
@@ -2414,11 +2568,11 @@ class ExpressionParser {
 
   /// Expression
   /// UnaryPrefix =
-  ///   op:UnaryPrefixOp? expr:UnaryPostfix
+  ///   op:UnaryPrefixOp? expr:UnaryPostfix {}
   ///   ;
-  Expression? parseUnaryPrefix(State<StringReader> state) {
+  Expression? parseUnaryPrefix(State<String> state) {
     Expression? $0;
-    // op:UnaryPrefixOp? expr:UnaryPostfix
+    // op:UnaryPrefixOp? expr:UnaryPostfix {}
     final $1 = state.pos;
     String? $2;
     // UnaryPrefixOp
@@ -2445,36 +2599,34 @@ class ExpressionParser {
   /// UnaryPrefixOp =
   ///   v:('-' / '!' / '~') Spaces
   ///   ;
-  String? parseUnaryPrefixOp(State<StringReader> state) {
+  String? parseUnaryPrefixOp(State<String> state) {
     String? $0;
     // v:('-' / '!' / '~') Spaces
     final $1 = state.pos;
     String? $2;
+    final $8 = state.pos;
     state.ok = false;
-    final $5 = state.input;
-    if (state.pos < $5.length) {
-      final $3 = $5.readChar(state.pos);
-      // ignore: unused_local_variable
-      final $4 = $5.count;
+    final $4 = state.input;
+    if (state.pos < $4.length) {
+      final $3 = $4.runeAt(state.pos);
+      state.pos += $3 > 0xffff ? 2 : 1;
       switch ($3) {
         case 45:
           state.ok = true;
-          state.pos += $4;
           $2 = '-';
           break;
         case 33:
           state.ok = true;
-          state.pos += $4;
           $2 = '!';
           break;
         case 126:
           state.ok = true;
-          state.pos += $4;
           $2 = '~';
           break;
       }
     }
     if (!state.ok) {
+      state.pos = $8;
       state.fail(const ErrorExpectedTags(['-', '!', '~']));
     }
     if (state.ok) {
@@ -2492,11 +2644,11 @@ class ExpressionParser {
 
   @pragma('vm:prefer-inline')
   @pragma('dart2js:tryInline')
-  int? matchChar(State<StringReader> state, int char, ParseError error) {
+  int? matchChar(State<String> state, int char, ParseError error) {
     final input = state.input;
-    state.ok = input.matchChar(char, state.pos);
+    state.ok = state.pos < input.length && input.runeAt(state.pos) == char;
     if (state.ok) {
-      state.pos += input.count;
+      state.pos += char > 0xffff ? 2 : 1;
       return char;
     } else {
       state.fail(error);
@@ -2506,12 +2658,35 @@ class ExpressionParser {
 
   @pragma('vm:prefer-inline')
   @pragma('dart2js:tryInline')
-  String? matchLiteral(
-      State<StringReader> state, String string, ParseError error) {
+  int? matchCharAsync(
+      State<ChunkedParsingSink> state, int char, ParseError error) {
+    final input = state.input;
+    if (state.pos < input.start) {
+      state.fail(ErrorBacktracking(state.pos));
+      return null;
+    }
+    state.ok = state.pos < input.end;
+    if (state.ok) {
+      final c = input.data.runeAt(state.pos - input.start);
+      state.ok = c == char;
+      if (state.ok) {
+        state.pos += c > 0xffff ? 2 : 1;
+        return char;
+      }
+    }
+    if (!state.ok) {
+      state.fail(error);
+    }
+    return null;
+  }
+
+  @pragma('vm:prefer-inline')
+  @pragma('dart2js:tryInline')
+  String? matchLiteral(State<String> state, String string, ParseError error) {
     final input = state.input;
     state.ok = input.startsWith(string, state.pos);
     if (state.ok) {
-      state.pos += input.count;
+      state.pos += string.length;
       return string;
     } else {
       state.fail(error);
@@ -2522,102 +2697,135 @@ class ExpressionParser {
   @pragma('vm:prefer-inline')
   @pragma('dart2js:tryInline')
   String? matchLiteral1(
-      State<StringReader> state, int char, String string, ParseError error) {
+      State<String> state, int char, String string, ParseError error) {
     final input = state.input;
-    state.ok = state.pos < input.length && input.readChar(state.pos) == char;
+    state.ok = state.pos < input.length && input.runeAt(state.pos) == char;
     if (state.ok) {
-      state.pos += input.count;
+      state.pos += char > 0xffff ? 2 : 1;
       state.ok = true;
       return string;
     }
     state.fail(error);
     return null;
   }
+
+  @pragma('vm:prefer-inline')
+  @pragma('dart2js:tryInline')
+  String? matchLiteral1Async(State<ChunkedParsingSink> state, int char,
+      String string, ParseError error) {
+    final input = state.input;
+    if (state.pos < input.start) {
+      state.fail(ErrorBacktracking(state.pos));
+      return null;
+    }
+    state.ok = state.pos < input.end &&
+        input.data.runeAt(state.pos - input.start) == char;
+    if (state.ok) {
+      state.pos += char > 0xffff ? 2 : 1;
+      return string;
+    }
+    state.fail(error);
+    return null;
+  }
+
+  @pragma('vm:prefer-inline')
+  @pragma('dart2js:tryInline')
+  String? matchLiteralAsync(
+      State<ChunkedParsingSink> state, String string, ParseError error) {
+    final input = state.input;
+    if (state.pos < input.start) {
+      state.fail(ErrorBacktracking(state.pos));
+      return null;
+    }
+    state.ok = state.pos <= input.end &&
+        input.data.startsWith(string, state.pos - input.start);
+    if (state.ok) {
+      state.pos += string.length;
+      return string;
+    }
+    state.fail(error);
+    return null;
+  }
+
+  @pragma('vm:prefer-inline')
+  @pragma('dart2js:tryInline')
+  int? readChar16Async(State<ChunkedParsingSink> state) {
+    final input = state.input;
+    if (state.pos < input.end || input.isClosed) {
+      state.ok = state.pos < input.end;
+      if (state.pos >= input.start) {
+        if (state.ok) {
+          return input.data.codeUnitAt(state.pos - input.start);
+        } else {
+          state.fail(const ErrorUnexpectedEndOfInput());
+        }
+      } else {
+        state.fail(ErrorBacktracking(state.pos));
+      }
+      return -1;
+    }
+    return null;
+  }
+
+  @pragma('vm:prefer-inline')
+  @pragma('dart2js:tryInline')
+  int? readChar32Async(State<ChunkedParsingSink> state) {
+    final input = state.input;
+    if (state.pos < input.end || input.isClosed) {
+      state.ok = state.pos < input.end;
+      if (state.pos >= input.start) {
+        if (state.ok) {
+          return input.data.runeAt(state.pos - input.start);
+        } else {
+          state.fail(const ErrorUnexpectedEndOfInput());
+        }
+      } else {
+        state.fail(ErrorBacktracking(state.pos));
+      }
+      return -1;
+    }
+    return null;
+  }
 }
 
 void fastParseString(
-  void Function(State<StringReader> state) fastParse,
-  String source, {
-  String Function(StringReader input, int offset, List<ErrorMessage> errors)?
-      errorMessage,
-}) {
-  final input = StringReader(source);
-  final result = tryFastParse(
-    fastParse,
-    input,
-    errorMessage: errorMessage,
-  );
+    void Function(State<String> state) fastParse, String source) {
+  final result = tryParse(fastParse, source);
+  result.getResult();
+}
 
-  if (result.ok) {
-    return;
+Sink<String> parseAsync<O>(
+    AsyncResult<O> Function(State<ChunkedParsingSink> state) parse,
+    void Function(ParseResult<ChunkedParsingSink, O> result) onComplete) {
+  final input = ChunkedParsingSink();
+  final state = State(input);
+  final result = parse(state);
+  void complete() {
+    final parseResult =
+        _createParseResult<ChunkedParsingSink, O>(state, result.value);
+    onComplete(parseResult);
   }
 
-  errorMessage ??= errorMessage;
-  final message = result.errorMessage;
-  throw FormatException(message);
+  if (result.isComplete) {
+    complete();
+  } else {
+    result.onComplete = complete;
+  }
+
+  return input;
 }
 
-O parseInput<I, O>(
-  O? Function(State<I> state) parse,
-  I input, {
-  String Function(I input, int offset, List<ErrorMessage> errors)? errorMessage,
-}) {
-  final result = tryParse(
-    parse,
-    input,
-    errorMessage: errorMessage,
-  );
-
+O parseString<O>(O? Function(State<String> state) parse, String source) {
+  final result = tryParse(parse, source);
   return result.getResult();
 }
 
-O parseString<O>(
-  O? Function(State<StringReader> state) parse,
-  String source, {
-  String Function(StringReader input, int offset, List<ErrorMessage> errors)?
-      errorMessage,
-}) {
-  final input = StringReader(source);
-  final result = tryParse(
-    parse,
-    input,
-    errorMessage: errorMessage,
-  );
-
-  return result.getResult();
-}
-
-ParseResult<I, void> tryFastParse<I>(
-  void Function(State<I> state) fastParse,
-  I input, {
-  String Function(I input, int offset, List<ErrorMessage> errors)? errorMessage,
-}) {
-  final result = _parse<I, void>(
-    fastParse,
-    input,
-    errorMessage: errorMessage,
-  );
+ParseResult<I, O> tryParse<I, O>(O? Function(State<I> state) parse, I input) {
+  final result = _parse<I, O>(parse, input);
   return result;
 }
 
-ParseResult<I, O> tryParse<I, O>(
-  O? Function(State<I> state) parse,
-  I input, {
-  String Function(I input, int offset, List<ErrorMessage> errors)? errorMessage,
-}) {
-  final result = _parse<I, O>(
-    parse,
-    input,
-    errorMessage: errorMessage,
-  );
-  return result;
-}
-
-ParseResult<I, O> _createParseResult<I, O>(
-  State<I> state,
-  O? result, {
-  String Function(I input, int offset, List<ErrorMessage> errors)? errorMessage,
-}) {
+ParseResult<I, O> _createParseResult<I, O>(State<I> state, O? result) {
   final input = state.input;
   if (state.ok) {
     return ParseResult(
@@ -2634,16 +2842,22 @@ ParseResult<I, O> _createParseResult<I, O>(
       .map((e) => e.getErrorMessage(input, offset))
       .toList();
   String? message;
-  if (errorMessage != null) {
-    message = errorMessage(input, offset, normalized);
-  } else if (input is StringReader) {
-    if (input.hasSource) {
-      message = _errorMessage(input.source, offset, normalized);
-    } else {
-      message = _errorMessageWithoutSource(input, offset, normalized);
-    }
-  } else if (input is String) {
-    message = _errorMessage(input, offset, normalized);
+  if (input is String) {
+    final source = _StringWrapper(
+      invalidChar: 32,
+      leftPadding: 0,
+      rightPadding: 0,
+      source: input,
+    );
+    message = _errorMessage(source, offset, normalized);
+  } else if (input is ChunkedParsingSink) {
+    final source2 = _StringWrapper(
+      invalidChar: 32,
+      leftPadding: input.start,
+      rightPadding: 0,
+      source: input.data,
+    );
+    message = _errorMessage(source2, offset, normalized);
   } else {
     message = normalized.join('\n');
   }
@@ -2659,12 +2873,14 @@ ParseResult<I, O> _createParseResult<I, O>(
   );
 }
 
-String _errorMessage(String source, int offset, List<ErrorMessage> errors) {
+String _errorMessage(
+    _StringWrapper source, int offset, List<ErrorMessage> errors) {
   final sb = StringBuffer();
   final errorInfoList = errors
       .map((e) => (length: e.length, message: e.toString()))
       .toSet()
       .toList();
+  final hasFullSource = source.leftPadding == 0 && source.rightPadding == 0;
   for (var i = 0; i < errorInfoList.length; i++) {
     int max(int x, int y) => x > y ? x : y;
     int min(int x, int y) => x < y ? x : y;
@@ -2680,18 +2896,20 @@ String _errorMessage(String source, int offset, List<ErrorMessage> errors) {
     final end = max(offset + length, offset);
     var row = 1;
     var lineStart = 0, next = 0, pos = 0;
-    while (pos < source.length) {
-      final c = source.codeUnitAt(pos++);
-      if (c == 0xa || c == 0xd) {
-        next = c == 0xa ? 0xd : 0xa;
-        if (pos < source.length && source.codeUnitAt(pos) == next) {
-          pos++;
+    if (hasFullSource) {
+      while (pos < source.length) {
+        final c = source.codeUnitAt(pos++);
+        if (c == 0xa || c == 0xd) {
+          next = c == 0xa ? 0xd : 0xa;
+          if (pos < source.length && source.codeUnitAt(pos) == next) {
+            pos++;
+          }
+          if (pos - 1 >= start) {
+            break;
+          }
+          row++;
+          lineStart = pos;
         }
-        if (pos - 1 >= start) {
-          break;
-        }
-        row++;
-        lineStart = pos;
       }
     }
 
@@ -2727,7 +2945,12 @@ String _errorMessage(String source, int offset, List<ErrorMessage> errors) {
     text = text.replaceAll('\n', ' ');
     text = text.replaceAll('\r', ' ');
     text = text.replaceAll('\t', ' ');
-    sb.writeln('line $row, column $column: $message');
+    if (hasFullSource) {
+      sb.writeln('line $row, column $column: $message');
+    } else {
+      sb.writeln('offset $start: $message');
+    }
+
     sb.writeln(text);
     sb.write(' ' * leftLen + '^' * indicatorLen);
   }
@@ -2735,68 +2958,11 @@ String _errorMessage(String source, int offset, List<ErrorMessage> errors) {
   return sb.toString();
 }
 
-String _errorMessageWithoutSource(
-    StringReader input, int offset, List<ErrorMessage> errors) {
-  final sb = StringBuffer();
-  final errorInfoList = errors
-      .map((e) => (length: e.length, message: e.toString()))
-      .toSet()
-      .toList();
-  for (var i = 0; i < errorInfoList.length; i++) {
-    int max(int x, int y) => x > y ? x : y;
-    int min(int x, int y) => x < y ? x : y;
-    if (sb.isNotEmpty) {
-      sb.writeln();
-      sb.writeln();
-    }
-
-    final errorInfo = errorInfoList[i];
-    final length = errorInfo.length;
-    final message = errorInfo.message;
-    final start = min(offset + length, offset);
-    final end = max(offset + length, offset);
-    final inputLen = input.length;
-    final lineLimit = min(80, inputLen);
-    final start2 = start;
-    final end2 = min(start2 + lineLimit, end);
-    final errorLen = end2 - start;
-    final indicatorLen = max(1, errorLen);
-    var text = input.substring(start, lineLimit);
-    text = text.replaceAll('\n', ' ');
-    text = text.replaceAll('\r', ' ');
-    text = text.replaceAll('\t', ' ');
-    sb.writeln('offset $offset: $message');
-    sb.writeln(text);
-    sb.write('^' * indicatorLen);
-  }
-
-  return sb.toString();
-}
-
 List<ParseError> _normalize<I>(I input, int offset, List<ParseError> errors) {
-  final result = errors.toList();
-  if (input case final StringReader input) {
-    if (offset >= input.length) {
-      result.add(const ErrorUnexpectedEndOfInput());
-      result.removeWhere((e) => e is ErrorUnexpectedCharacter);
-    }
-  } else if (input case final ChunkedData<StringReader> input) {
-    if (input.isClosed && offset == input.start + input.data.length) {
-      result.add(const ErrorUnexpectedEndOfInput());
-      result.removeWhere((e) => e is ErrorUnexpectedCharacter);
-    }
-  }
-
-  final foundTags =
-      result.whereType<ErrorExpectedTag>().map((e) => e.tag).toList();
-  if (foundTags.isNotEmpty) {
-    result.removeWhere((e) => e is ErrorExpectedTag);
-    result.add(ErrorExpectedTags(foundTags));
-  }
-
-  final expectedTags = result.whereType<ErrorExpectedTags>().toList();
+  final errorList = errors.toList();
+  final expectedTags = errorList.whereType<ErrorExpectedTags>().toList();
   if (expectedTags.isNotEmpty) {
-    result.removeWhere((e) => e is ErrorExpectedTags);
+    errorList.removeWhere((e) => e is ErrorExpectedTags);
     final tags = <String>{};
     for (final error in expectedTags) {
       tags.addAll(error.tags);
@@ -2805,73 +2971,96 @@ List<ParseError> _normalize<I>(I input, int offset, List<ParseError> errors) {
     final tagList = tags.toList();
     tagList.sort();
     final error = ErrorExpectedTags(tagList);
-    result.add(error);
+    errorList.add(error);
   }
 
-  return result;
+  final errorMap = <Object?, ParseError>{};
+  for (final error in errorList) {
+    Object key = error;
+    if (error is ErrorExpectedCharacter) {
+      key = (ErrorExpectedCharacter, error.char);
+    } else if (error is ErrorUnexpectedInput) {
+      key = (ErrorUnexpectedInput, error.length);
+    } else if (error is ErrorUnknownError) {
+      key = ErrorUnknownError;
+    } else if (error is ErrorUnexpectedCharacter) {
+      key = (ErrorUnexpectedCharacter, error.char);
+    } else if (error is ErrorBacktracking) {
+      key = (ErrorBacktracking, error.length);
+    }
+
+    errorMap[key] = error;
+  }
+
+  return errorMap.values.toList();
 }
 
-ParseResult<I, O> _parse<I, O>(
-  O? Function(State<I> input) parse,
-  I input, {
-  String Function(I input, int offset, List<ErrorMessage> errors)? errorMessage,
-}) {
+ParseResult<I, O> _parse<I, O>(O? Function(State<I> input) parse, I input) {
   final state = State(input);
   final result = parse(state);
-  return _createParseResult<I, O>(
-    state,
-    result,
-    errorMessage: errorMessage,
-  );
+  return _createParseResult<I, O>(state, result);
 }
 
-abstract interface class ByteReader {
-  int get length;
+class AsyncResult<T> {
+  bool isComplete = false;
 
-  int readByte(int offset);
+  void Function()? onComplete;
+
+  T? value;
 }
 
-abstract class ChunkedData<T> implements Sink<T> {
-  void Function()? handler;
+class ChunkedParsingSink implements Sink<String> {
+  int bufferLoad = 0;
 
-  bool _isClosed = false;
-
-  int buffering = 0;
-
-  T data;
+  String data = '';
 
   int end = 0;
+
+  void Function()? handle;
 
   bool sleep = false;
 
   int start = 0;
 
-  final T _empty;
+  int _buffering = 0;
 
-  ChunkedData(T empty)
-      : data = empty,
-        _empty = empty;
+  bool _isClosed = false;
+
+  int _lastPosition = 0;
 
   bool get isClosed => _isClosed;
 
   @override
-  void add(T data) {
+  void add(String data) {
     if (_isClosed) {
       throw StateError('Chunked data sink already closed');
     }
 
-    if (buffering != 0) {
-      this.data = join(this.data, data);
-    } else {
-      start = end;
-      this.data = data;
+    if (_lastPosition > start) {
+      if (_lastPosition == end) {
+        this.data = '';
+      } else {
+        this.data = this.data.substring(_lastPosition - start);
+      }
+
+      start = _lastPosition;
     }
 
-    end = start + getLength(this.data);
+    if (this.data.isEmpty) {
+      this.data = data;
+    } else {
+      this.data = '${this.data}$data';
+    }
+
+    end = start + this.data.length;
+    if (bufferLoad < this.data.length) {
+      bufferLoad = this.data.length;
+    }
+
     sleep = false;
     while (!sleep) {
-      final h = handler;
-      handler = null;
+      final h = handle;
+      handle = null;
       if (h == null) {
         break;
       }
@@ -2879,9 +3068,23 @@ abstract class ChunkedData<T> implements Sink<T> {
       h();
     }
 
-    if (buffering == 0) {
-      //
+    if (_buffering == 0) {
+      if (_lastPosition > start) {
+        if (_lastPosition == end) {
+          this.data = '';
+        } else {
+          this.data = this.data.substring(_lastPosition - start);
+        }
+
+        start = _lastPosition;
+      }
     }
+  }
+
+  @pragma('vm:prefer-inline')
+  @pragma('dart2js:tryInline')
+  int beginBuffering() {
+    return _buffering++;
   }
 
   @override
@@ -2893,8 +3096,8 @@ abstract class ChunkedData<T> implements Sink<T> {
     _isClosed = true;
     sleep = false;
     while (!sleep) {
-      final h = handler;
-      handler = null;
+      final h = handle;
+      handle = null;
       if (h == null) {
         break;
       }
@@ -2902,19 +3105,40 @@ abstract class ChunkedData<T> implements Sink<T> {
       h();
     }
 
-    if (buffering != 0) {
+    if (_buffering != 0) {
       throw StateError('On closing, an incomplete buffering was detected');
     }
 
-    final length = getLength(data);
-    if (length != 0) {
-      data = _empty;
+    if (data.isNotEmpty) {
+      data = '';
     }
   }
 
-  int getLength(T data);
+  @pragma('vm:prefer-inline')
+  @pragma('dart2js:tryInline')
+  void endBuffering(int position) {
+    _buffering--;
+    if (_buffering == 0) {
+      if (_lastPosition < position) {
+        _lastPosition = position;
+      }
+    } else if (_buffering < 0) {
+      throw StateError('Inconsistent buffering completion detected.');
+    }
+  }
+}
 
-  T join(T data1, T data2);
+class ErrorBacktracking extends ParseError {
+  static const message = 'Backtracking error to position {{0}}';
+
+  final int position;
+
+  const ErrorBacktracking(this.position);
+
+  @override
+  ErrorMessage getErrorMessage(Object? input, int? offset) {
+    return ErrorMessage(0, ErrorBacktracking.message, [position]);
+  }
 }
 
 class ErrorExpectedCharacter extends ParseError {
@@ -2930,55 +3154,6 @@ class ErrorExpectedCharacter extends ParseError {
     final hexValue = char.toRadixString(16);
     final argument = '$value (0x$hexValue)';
     return ErrorMessage(0, ErrorExpectedCharacter.message, [argument]);
-  }
-}
-
-class ErrorExpectedEndOfInput extends ParseError {
-  static const message = 'Expected an end of input';
-
-  const ErrorExpectedEndOfInput();
-
-  @override
-  ErrorMessage getErrorMessage(Object? input, offset) {
-    return const ErrorMessage(0, ErrorExpectedEndOfInput.message);
-  }
-}
-
-class ErrorExpectedIntegerValue extends ParseError {
-  static const message = 'Expected an integer value {0}';
-
-  final int size;
-
-  final int value;
-
-  const ErrorExpectedIntegerValue(this.size, this.value);
-
-  @override
-  ErrorMessage getErrorMessage(Object? input, int? offset) {
-    var argument = value.toRadixString(16);
-    if (const [8, 16, 24, 32, 40, 48, 56, 64].contains(size)) {
-      argument = argument.padLeft(size >> 2, '0');
-    }
-
-    argument = '0x$argument';
-    if (value >= 0 && value <= 0x10ffff) {
-      argument = '$argument (${ParseError.escape(value)})';
-    }
-
-    return ErrorMessage(0, ErrorExpectedIntegerValue.message, [argument]);
-  }
-}
-
-class ErrorExpectedTag extends ParseError {
-  static const message = 'Expected: {0}';
-
-  final String tag;
-
-  const ErrorExpectedTag(this.tag);
-
-  @override
-  ErrorMessage getErrorMessage(Object? input, int? offset) {
-    return const ErrorMessage(0, ErrorExpectedTag.message);
   }
 }
 
@@ -3036,12 +3211,30 @@ class ErrorUnexpectedCharacter extends ParseError {
   ErrorMessage getErrorMessage(Object? input, int? offset) {
     var argument = '<?>';
     var char = this.char;
-    if (input is StringReader && input.hasSource) {
-      if (offset case final int offset) {
+    if (offset != null && offset > 0) {
+      if (input is String) {
         if (offset < input.length) {
-          char = input.readChar(offset);
+          char = input.runeAt(offset);
         } else {
           argument = '<EOF>';
+        }
+      } else if (input is ChunkedParsingSink) {
+        final data = input.data;
+        final length = input.isClosed ? input.end : -1;
+        if (length != -1) {
+          if (offset < length) {
+            final source = _StringWrapper(
+              invalidChar: 32,
+              leftPadding: input.start,
+              rightPadding: 0,
+              source: data,
+            );
+            if (source.hasCodeUnitAt(offset)) {
+              char = source.runeAt(offset);
+            }
+          } else {
+            argument = '<EOF>';
+          }
         }
       }
     }
@@ -3063,12 +3256,12 @@ class ErrorUnexpectedEndOfInput extends ParseError {
 
   @override
   ErrorMessage getErrorMessage(Object? input, int? offset) {
-    return const ErrorMessage(0, ErrorUnexpectedEndOfInput.message);
+    return ErrorMessage(length, ErrorUnexpectedEndOfInput.message);
   }
 }
 
 class ErrorUnexpectedInput extends ParseError {
-  static const message = 'Unexpected input';
+  static const message = 'Unexpected input data';
 
   @override
   final int length;
@@ -3261,17 +3454,24 @@ class State<T> {
 
   @override
   String toString() {
-    if (input case final StringReader input) {
-      if (input.hasSource) {
-        final source = input.source;
-        if (pos >= source.length) {
-          return '$pos:';
-        }
-        var length = source.length - pos;
-        length = length > 40 ? 40 : length;
-        final string = source.substring(pos, pos + length);
-        return '$pos:$string';
+    if (input case final String input) {
+      if (pos >= input.length) {
+        return '$pos:';
       }
+      var length = input.length - pos;
+      length = length > 40 ? 40 : length;
+      final string = input.substring(pos, pos + length);
+      return '$pos:$string';
+    } else if (input case final ChunkedParsingSink input) {
+      final source = input.data;
+      final pos = this.pos - input.start;
+      if (pos < 0 || pos >= source.length) {
+        return '$pos:';
+      }
+      var length = source.length - pos;
+      length = length > 40 ? 40 : length;
+      final string = source.substring(pos, pos + length);
+      return '$pos:$string';
     }
 
     return super.toString();
@@ -3298,110 +3498,70 @@ class State<T> {
   }
 }
 
-abstract interface class StringReader {
-  factory StringReader(String source) {
-    return _StringReader(source);
-  }
+class _StringWrapper {
+  final int invalidChar;
 
-  int get count;
+  final int leftPadding;
 
-  bool get hasSource;
-
-  int get length;
-
-  String get source;
-
-  int indexOf(String string, int start);
-
-  bool matchChar(int char, int offset);
-
-  int readChar(int offset);
-
-  bool startsWith(String string, [int index = 0]);
-
-  String substring(int start, [int? end]);
-}
-
-class StringReaderChunkedData extends ChunkedData<StringReader> {
-  StringReaderChunkedData() : super(StringReader(''));
-
-  @override
-  int getLength(StringReader data) => data.length;
-
-  @override
-  StringReader join(StringReader data1, StringReader data2) => data1.length != 0
-      ? StringReader('${data1.source}${data2.source}')
-      : data2;
-}
-
-class _StringReader implements StringReader {
-  @override
-  final bool hasSource = true;
-
-  @override
   final int length;
 
-  @override
-  int count = 0;
+  final int rightPadding;
 
-  @override
   final String source;
 
-  _StringReader(this.source) : length = source.length;
+  _StringWrapper({
+    required this.invalidChar,
+    required this.leftPadding,
+    required this.rightPadding,
+    required this.source,
+  }) : length = leftPadding + source.length + rightPadding;
 
-  @override
-  int indexOf(String string, int start) {
-    return source.indexOf(string, start);
+  int codeUnitAt(int index) {
+    if (index < 0 || index > length - 1) {
+      throw RangeError.range(index, 0, length, 'index');
+    }
+
+    final offset = index - leftPadding;
+    if (offset >= 0 && offset < source.length) {
+      return source.codeUnitAt(offset);
+    }
+
+    return invalidChar;
   }
 
-  @override
-  @pragma('vm:prefer-inline')
-  @pragma('dart2js:tryInline')
-  bool matchChar(int char, int offset) {
-    if (offset < length) {
-      final c = source.runeAt(offset);
-      count = char > 0xffff ? 2 : 1;
-      if (c == char) {
-        return true;
+  bool hasCodeUnitAt(int index) {
+    if (index < 0 || index > length - 1) {
+      throw RangeError.range(index, 0, length, 'index');
+    }
+
+    return index >= leftPadding && index <= rightPadding && source.isNotEmpty;
+  }
+
+  int runeAt(int index) {
+    final w1 = codeUnitAt(index++);
+    if (w1 > 0xd7ff && w1 < 0xe000) {
+      if (index < length) {
+        final w2 = codeUnitAt(index);
+        if ((w2 & 0xfc00) == 0xdc00) {
+          return 0x10000 + ((w1 & 0x3ff) << 10) + (w2 & 0x3ff);
+        }
       }
+      throw FormatException('Invalid UTF-16 character', this, index - 1);
+    }
+    return w1;
+  }
+
+  String substring(int start, int end) {
+    if (start < 0 || start > length) {
+      throw RangeError.range(start, 0, length, 'index');
     }
 
-    return false;
-  }
-
-  @override
-  @pragma('vm:prefer-inline')
-  @pragma('dart2js:tryInline')
-  int readChar(int offset) {
-    final result = source.runeAt(offset);
-    count = result > 0xffff ? 2 : 1;
-    return result;
-  }
-
-  @override
-  @pragma('vm:prefer-inline')
-  @pragma('dart2js:tryInline')
-  bool startsWith(String string, [int index = 0]) {
-    if (source.startsWith(string, index)) {
-      count = string.length;
-      return true;
+    if (end < start || end > length) {
+      throw RangeError.range(end, start, length, 'end');
     }
 
-    return false;
-  }
-
-  @override
-  @pragma('vm:prefer-inline')
-  @pragma('dart2js:tryInline')
-  String substring(int start, [int? end]) {
-    final result = source.substring(start, end);
-    count = result.length;
-    return result;
-  }
-
-  @override
-  String toString() {
-    return source;
+    final codeUnits = List.generate(end - start, (i) => codeUnitAt(start + i));
+    return String.fromCharCodes(codeUnits);
   }
 }
 

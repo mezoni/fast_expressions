@@ -1,3 +1,7 @@
+## 0.1.6
+
+- The parser has been rebuilt using the new version of the `peg` parser generation tool.
+
 ## 0.1.5
 
 - Fixed a bug with parsing named function arguments.
