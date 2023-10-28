@@ -1,3 +1,8 @@
+## 0.1.7
+
+- Changes in the grammar file `expression.peg`.
+- The parser has been rebuilt using the new version of the `peg` parser generation tool.
+
 ## 0.1.6
 
 - The parser has been rebuilt using the new version of the `peg` parser generation tool.

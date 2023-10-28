@@ -179,62 +179,65 @@ Conditional =
   / IfNull ;
 
 Expression
-IfNull = h:LogicalOr t:(op:IfNullOp expr:LogicalOr)* { $$ = t.isEmpty ? h : t.fold(h, _binary); } ;
+IfNull = h:LogicalOr t:(op:IfNullOp ↑ expr:LogicalOr)* { $$ = t.isEmpty ? h : t.fold(h, _binary); } ;
 
 IfNullOp = v:'??' Spaces ;
 
 Expression
-LogicalOr = h:LogicalAnd t:(op:LogicalOrOp expr:LogicalAnd)* { $$ = t.isEmpty ? h : t.fold(h, _binary); } ;
+LogicalOr = h:LogicalAnd t:(op:LogicalOrOp ↑ expr:LogicalAnd)* { $$ = t.isEmpty ? h : t.fold(h, _binary); } ;
 
 LogicalOrOp = v:'||' Spaces ;
 
 Expression
-LogicalAnd = h:Equality t:(op:LogicalAndOp expr:Equality)* { $$ = t.isEmpty ? h : t.fold(h, _binary); } ;
+LogicalAnd = h:Equality t:(op:LogicalAndOp ↑ expr:Equality)* { $$ = t.isEmpty ? h : t.fold(h, _binary); } ;
 
 LogicalAndOp = v:'&&' Spaces ;
 
 Expression
-Equality = h:Relational t:(op:EqualityOp expr:Relational)* { $$ = t.isEmpty ? h : t.fold(h, _binary); } ;
+Equality = h:Relational t:(op:EqualityOp ↑ expr:Relational)* { $$ = t.isEmpty ? h : t.fold(h, _binary); } ;
 
 EqualityOp = v:('==' / '!=') Spaces ;
 
 Expression
-Relational = h:BitwiseOr t:(op:RelationalOp expr:BitwiseOr)* { $$ = t.isEmpty ? h : t.fold(h, _binary); } ;
+Relational = h:BitwiseOr t:(op:RelationalOp ↑ expr:BitwiseOr)* { $$ = t.isEmpty ? h : t.fold(h, _binary); } ;
 
 RelationalOp = v:('>=' / '>' / '<=' / '<') Spaces ;
 
 Expression
-BitwiseOr = h:BitwiseXor t:(op:BitwiseOrOp expr:BitwiseXor)* { $$ = t.isEmpty ? h : t.fold(h, _binary); } ;
+BitwiseOr = h:BitwiseXor t:(op:BitwiseOrOp ↑ expr:BitwiseXor)* { $$ = t.isEmpty ? h : t.fold(h, _binary); } ;
 
-BitwiseOrOp = v:'|' Spaces ;
+BitwiseOrOp = !'||' v:'|' Spaces ;
 
 Expression
-BitwiseXor = h:BitwiseAnd t:(op:BitwiseXorOp expr:BitwiseAnd)* { $$ = t.isEmpty ? h : t.fold(h, _binary); } ;
+BitwiseXor = h:BitwiseAnd t:(op:BitwiseXorOp ↑ expr:BitwiseAnd)* { $$ = t.isEmpty ? h : t.fold(h, _binary); } ;
 
 BitwiseXorOp = v:'^' Spaces ;
 
 Expression
-BitwiseAnd = h:Shift t:(op:BitwiseAndOp expr:Shift)* { $$ = t.isEmpty ? h : t.fold(h, _binary); } ;
+BitwiseAnd = h:Shift t:(op:BitwiseAndOp ↑ expr:Shift)* { $$ = t.isEmpty ? h : t.fold(h, _binary); } ;
 
-BitwiseAndOp = v:'&' Spaces ;
+BitwiseAndOp = !'&&' v:'&' Spaces ;
 
 Expression
-Shift = h:Additive t:(op:ShiftOp expr:Additive)* { $$ = t.isEmpty ? h : t.fold(h, _binary); } ;
+Shift = h:Additive t:(op:ShiftOp ↑ expr:Additive)* { $$ = t.isEmpty ? h : t.fold(h, _binary); } ;
 
 ShiftOp = v:('<<' / '>>>' / '>>') Spaces ;
 
 Expression
-Additive = h:Multiplicative t:(op:AdditiveOp expr:Multiplicative)* { $$ = t.isEmpty ? h : t.fold(h, _binary); } ;
+Additive = h:Multiplicative t:(op:AdditiveOp ↑ expr:Multiplicative)* { $$ = t.isEmpty ? h : t.fold(h, _binary); } ;
 
 AdditiveOp = v:('-' / '+') Spaces ;
 
 Expression
-Multiplicative = h:UnaryPrefix t:(op:MultiplicativeOp expr:UnaryPrefix)* { $$ = t.isEmpty ? h : t.fold(h, _binary); } ;
+Multiplicative = h:UnaryPrefix t:(op:MultiplicativeOp ↑ expr:UnaryPrefix)* { $$ = t.isEmpty ? h : t.fold(h, _binary); } ;
 
 MultiplicativeOp = v:('/' / '*' / '%' / '~/') Spaces ;
 
+UnaryPrefix = @expected('expression', UnaryPrefix_) ;
+
+@inline
 Expression
-UnaryPrefix = op:UnaryPrefixOp? expr:UnaryPostfix { $$ = _prefix(op, expr); } ;
+UnaryPrefix_ = op:UnaryPrefixOp? expr:UnaryPostfix { $$ = _prefix(op, expr); } ;
 
 UnaryPrefixOp = v:('-' / '!' / '~') Spaces ;
 
@@ -243,13 +246,13 @@ UnaryPostfix = object:Primary selectors:Selector* { $$ = _postfix(object, select
 
 ({String kind, dynamic arguments})
 Selector =
-    kind:Dot arguments:IdentifierRaw
+    kind:Dot arguments:Identifier_
   / kind:OpenBracket arguments:Expression CloseBracket
   / kind:OpenParenthesis arguments:Arguments CloseParenthesis ;
 
-Arguments = @sepBy((NamedArgument / PositionalArgument), Comma) ;
+Arguments = @list(NamedArgument / PositionalArgument, Comma ↑ v:(NamedArgument / PositionalArgument)) ;
 
-NamedArgument = name:IdentifierRaw Colon expr:Expression ;
+NamedArgument = name:Identifier_ Colon expr:Expression ;
 
 PositionalArgument = name:'' expr:Expression ;
 
@@ -269,34 +272,16 @@ Boolean =
     'true' Spaces { $$ = () => true; }
   / 'false' Spaces { $$ = () => false; } ;
 
-Fraction = @errorHandler([0-9]+, {
-    error = const ErrorExpectedTags(['fractional part']);
-  }) ;
-
-Exponent = @errorHandler([-+]? [0-9]+, {
-    error = const ErrorExpectedTags(['exponent part']);
-  }) ;
-
 Expression
-NumberRaw = v:$(
+Number = v:$(
   [-]?
   ([0] / [1-9][0-9]*)
-  ([.] Fraction)?
-  ([eE] Exponent)?
-  ) {
+  ([.] [0-9]+)?
+  ([eE] ↑ [-+]? [0-9]+)?
+  ) Spaces {
     final n = num.parse(v);
     $$ = () => n;
   } ;
-
-Expression
-Number = v:@errorHandler(NumberRaw, {
-    if (state.failPos != state.pos) {
-      error = ErrorMessage(state.pos - state.failPos, 'Malformed number');
-    } else {
-      rollbackErrors = true;
-      error = ErrorExpectedTags(['number']);
-    }
-  }) Spaces ;
 
 @inline
 String
@@ -306,13 +291,11 @@ EscapeChar = c:["/bfnrt\\] { $$ = _escape(c); } ;
 String
 EscapeHex = 'u' v:HexNumber { $$ = String.fromCharCode(v); } ;
 
-HexNumber = @errorHandler(HexNumberRaw, {
-    error = ErrorMessage(state.pos - state.failPos, 'Expected 4 digit hex number');
-    rollbackErrors = true;
-  }) ;
+HexNumber = @indicate('Expected 4 digit hex number', HexNumber_) ;
 
+@inline
 int
-HexNumberRaw = v:$([0-9A-Za-z]{4}) { $$ = int.parse(v, radix: 16); } ;
+HexNumber_ = v:$([0-9A-Za-z]{4}) { $$ = int.parse(v, radix: 16); } ;
 
 String
 StringChars =
@@ -325,15 +308,12 @@ StringRaw = '"' v:StringChars* DoubleQuote { $$ = v.join(); } ;
 Expression
 String = v:StringRaw { $$ = () => v; } ;
 
+@inline
 String
-IdentifierRaw = v:@errorHandler($([a-zA-Z_$] [a-zA-Z_$0-9]*), {
-    if (state.failPos == state.pos) {
-      error = const ErrorExpectedTags(['identifier']);
-    }
-  }) Spaces ;
+Identifier_ = v:@expected('identifier', $([a-zA-Z_$] [a-zA-Z_$0-9]*)) Spaces ;
 
 Expression
-Identifier = v:IdentifierRaw {
+Identifier = v:Identifier_ {
     $$ = () {
       if (!context.containsKey(v)) {
         throw StateError("Variable '$v' not found");
